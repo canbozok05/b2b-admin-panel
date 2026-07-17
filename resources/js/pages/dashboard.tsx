@@ -2,30 +2,47 @@ import { Head } from '@inertiajs/react';
 
 import { dashboard } from '@/routes';
 
-const statistics = [
-    {
-        title: 'Toplam Müşteri',
-        value: '0',
-        description: 'Sisteme kayıtlı müşteriler',
-    },
-    {
-        title: 'Aylık Satış Hacmi',
-        value: '₺0,00',
-        description: 'Bu ay gerçekleşen toplam satış',
-    },
-    {
-        title: 'Bekleyen Siparişler',
-        value: '0',
-        description: 'İşlem bekleyen siparişler',
-    },
-    {
-        title: 'Kritik Stok',
-        value: '0',
-        description: 'Stok miktarı 10’dan az olan ürünler',
-    },
-];
+type DashboardProps = {
+    totalCustomers: number;
+    monthlySales: number;
+    pendingOrders: number;
+    criticalStock: number;
+};
 
-export default function Dashboard() {
+export default function Dashboard({
+    totalCustomers,
+    monthlySales,
+    pendingOrders,
+    criticalStock,
+}: DashboardProps) {
+    const currencyFormatter = new Intl.NumberFormat('tr-TR', {
+        style: 'currency',
+        currency: 'TRY',
+    });
+
+    const statistics = [
+        {
+            title: 'Toplam Müşteri',
+            value: totalCustomers.toString(),
+            description: 'Sisteme kayıtlı müşteriler',
+        },
+        {
+            title: 'Aylık Satış Hacmi',
+            value: currencyFormatter.format(monthlySales),
+            description: 'Bu ay gerçekleşen toplam satış',
+        },
+        {
+            title: 'Bekleyen Siparişler',
+            value: pendingOrders.toString(),
+            description: 'İşlem bekleyen siparişler',
+        },
+        {
+            title: 'Kritik Stok',
+            value: criticalStock.toString(),
+            description: 'Stok miktarı 10’dan az olan ürünler',
+        },
+    ];
+
     return (
         <>
             <Head title="Ana Panel" />
