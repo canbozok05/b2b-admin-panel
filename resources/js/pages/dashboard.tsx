@@ -1,25 +1,75 @@
 import { Head } from '@inertiajs/react';
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
+
 import { dashboard } from '@/routes';
+
+const statistics = [
+    {
+        title: 'Toplam Müşteri',
+        value: '0',
+        description: 'Sisteme kayıtlı müşteriler',
+    },
+    {
+        title: 'Aylık Satış Hacmi',
+        value: '₺0,00',
+        description: 'Bu ay gerçekleşen toplam satış',
+    },
+    {
+        title: 'Bekleyen Siparişler',
+        value: '0',
+        description: 'İşlem bekleyen siparişler',
+    },
+    {
+        title: 'Kritik Stok',
+        value: '0',
+        description: 'Stok miktarı 10’dan az olan ürünler',
+    },
+];
 
 export default function Dashboard() {
     return (
         <>
-            <Head title="Dashboard" />
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
+            <Head title="Ana Panel" />
+
+            <div className="flex h-full flex-1 flex-col gap-6 p-6">
+                <div>
+                    <h1 className="text-2xl font-semibold">
+                        B2B Yönetim Paneli
+                    </h1>
+
+                    <p className="text-sm text-muted-foreground">
+                        Stok, müşteri ve sipariş işlemlerini yönetin.
+                    </p>
                 </div>
-                <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-                    <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
+
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    {statistics.map((statistic) => (
+                        <div
+                            key={statistic.title}
+                            className="rounded-xl border bg-card p-5 shadow-sm"
+                        >
+                            <p className="text-sm text-muted-foreground">
+                                {statistic.title}
+                            </p>
+
+                            <p className="mt-2 text-3xl font-bold">
+                                {statistic.value}
+                            </p>
+
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                {statistic.description}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="rounded-xl border bg-card p-5">
+                    <h2 className="text-lg font-semibold">
+                        Kritik Stok Uyarıları
+                    </h2>
+
+                    <p className="mt-2 text-sm text-muted-foreground">
+                        Şu anda kritik stok seviyesinde ürün bulunmuyor.
+                    </p>
                 </div>
             </div>
         </>
@@ -29,7 +79,7 @@ export default function Dashboard() {
 Dashboard.layout = {
     breadcrumbs: [
         {
-            title: 'Dashboard',
+            title: 'Ana Panel',
             href: dashboard(),
         },
     ],
