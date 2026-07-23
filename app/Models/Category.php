@@ -4,11 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 
 
 #[Fillable(['name', 'slug' , 'is_active' , 'parent_id'])]
 class Category extends Model
 {
+
+    use HasFactory;
+
     public function products(){
         return $this->hasMany(Product::class);
     }

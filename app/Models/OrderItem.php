@@ -4,11 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 
 #[Fillable(['order_id' , 'product_id' , 'quantity' ,'unit_price'])]
 
 class OrderItem extends Model
 {
+
+    use HasFactory;
+
     public function order(){
         return $this->belongsTo(Order::class);
     }
