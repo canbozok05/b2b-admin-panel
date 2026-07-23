@@ -7,6 +7,7 @@ type DashboardProps = {
     monthlySales: number;
     pendingOrders: number;
     criticalStock: number;
+    lowStockProducts: {name: string; stock_quantity:number}[];
 };
 
 export default function Dashboard({
@@ -14,6 +15,8 @@ export default function Dashboard({
     monthlySales,
     pendingOrders,
     criticalStock,
+    lowStockProducts,
+    
 }: DashboardProps) {
     const currencyFormatter = new Intl.NumberFormat('tr-TR', {
         style: 'currency',
@@ -83,10 +86,25 @@ export default function Dashboard({
                     <h2 className="text-lg font-semibold">
                         Kritik Stok Uyarıları
                     </h2>
-
+                    {lowStockProducts.length>0?(
+                        <ul className="mt-3 divide-y">
+                            {lowStockProducts.map((product) =>(
+                                <li
+                                    key={product.name}
+                                    className="flex items-center justify-between py-2 text-sm"
+                                >
+                                    <span>{product.name}</span>
+                                    <span className="font-semibold text-destructive">
+                                        {product.stock_quantity} adet
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
                     <p className="mt-2 text-sm text-muted-foreground">
                         Şu anda kritik stok seviyesinde ürün bulunmuyor.
                     </p>
+                    )}
                 </div>
             </div>
         </>

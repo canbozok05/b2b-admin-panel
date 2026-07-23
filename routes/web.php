@@ -2,16 +2,20 @@
 
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Models\Customer;
+use App\Models\Order;
+use App\Models\Product;
 
 Route::inertia('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
     return Inertia::render('dashboard', [
-        'totalCustomers' => 50,
-        'monthlySales' => 24500.50,
-        'pendingOrders' => 3,
-        'criticalStock' => 4,
+        'totalCustomers' => Customer::count(),
+        'monthlySales' => Order::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->sum('total_amount'),
+        'pendingOrders' => Order::where('status', 'pending')->count(),
+        'criticalStock' => Product::where('stock_quantity' , '<' ,10)->count(),
+        'lowStockProducts' => Product::where('stock_quantity','<',10)->get(['name','stock_quantity']),
     ]);
 })->name('dashboard');
 });
