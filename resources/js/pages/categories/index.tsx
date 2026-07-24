@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import categoryRoutes from '@/routes/categories';
 
 type Category = {
     id: number;
@@ -18,7 +19,15 @@ export default function CategoryIndex({ categories }: Props) {
             <Head title="Kategoriler" />
 
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
-                <h1 className="text-2xl font-semibold">Kategoriler</h1>
+                <div className="flex items-center justify-between">
+                    <h1 className="text-2xl font-semibold">Kategoriler</h1>
+                    <Link
+                        href={categoryRoutes.create.url()}
+                        className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
+                    >
+                        Yeni Kategori
+                    </Link>
+                </div>
 
                 <table className="w-full text-sm">
                     <thead>
