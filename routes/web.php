@@ -1,5 +1,5 @@
 <?php
-
+use App\Http\Controllers\CategoryController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Models\Customer;
@@ -18,6 +18,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'lowStockProducts' => Product::where('stock_quantity','<',10)->get(['name','stock_quantity']),
     ]);
 })->name('dashboard');
+
+Route::get('categories', [CategoryController::class,'index'])->name('categories.index');
+
 });
 
 require __DIR__.'/settings.php';
