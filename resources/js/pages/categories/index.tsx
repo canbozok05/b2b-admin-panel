@@ -35,6 +35,7 @@ export default function CategoryIndex({ categories }: Props) {
                             <th className="p-2">İsim</th>
                             <th className="p-2">Üst Kategori</th>
                             <th className="p-2">Durum</th>
+                            <th className="p-2">İşlemler</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -46,6 +47,29 @@ export default function CategoryIndex({ categories }: Props) {
                                 </td>
                                 <td className="p-2">
                                     {category.is_active ? 'Aktif' : 'Pasif'}
+                                </td>
+                                <td className="p-2">
+                                    <div className="flex gap-3">
+                                        <Link
+                                            href={categoryRoutes.edit.url(category.id)}
+                                            className="text-primary underline"
+                                        >
+                                            Düzenle
+                                        </Link>
+                                        <Link
+                                            href={categoryRoutes.destroy.url(category.id)}
+                                            method="delete"
+                                            as="button"
+                                            onClick={(e) => {
+                                                if (!confirm('Bu kategoriyi silmek istediğine emin misin?')) {
+                                                    e.preventDefault();
+                                                }
+                                            }}
+                                            className="text-destructive underline"
+                                        >
+                                            Sil
+                                        </Link>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
