@@ -5,6 +5,7 @@ use Inertia\Inertia;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
+use App\Http\Controllers\ProductController;
 
 Route::inertia('/', 'welcome')->name('home');
 
@@ -31,6 +32,9 @@ Route::get('categories/{id}/edit', [CategoryController::class,
 Route::put('categories/{id}' , [CategoryController::class, 'update'])->name('categories.update');
 
 Route::delete('categories/{id}',[CategoryController::class, 'destroy'])->name('categories.destroy');
+
+Route::get('products', [ProductController::class,
+'index'])->name('products.index');
 
 });
 
