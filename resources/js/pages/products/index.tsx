@@ -65,6 +65,7 @@ export default function ProductIndex({ products: allProducts, filters }: Props) 
                             <th className="p-2">Fiyat</th>
                             <th className="p-2">Stok</th>
                             <th className="p-2">Durum</th>
+                            <th className="p-2">İşlemler</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -89,6 +90,29 @@ export default function ProductIndex({ products: allProducts, filters }: Props) 
                                 <td className="p-2">{product.stock_quantity}</td>
                                 <td className="p-2">
                                     {product.is_published ? 'Yayında' : 'Taslak'}
+                                </td>
+                                <td className="p-2">
+                                    <div className="flex gap-3">
+                                        <Link
+                                            href={products.edit.url(product.id)}
+                                            className="text-primary underline"
+                                        >
+                                            Düzenle
+                                        </Link>
+                                        <Link
+                                            href={products.destroy.url(product.id)}
+                                            method="delete"
+                                            as="button"
+                                            onClick={(e) => {
+                                                if (!confirm('Bu ürünü silmek istediğine emin misin?')) {
+                                                    e.preventDefault();
+                                                }
+                                            }}
+                                            className="text-destructive underline"
+                                        >
+                                            Sil
+                                        </Link>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
