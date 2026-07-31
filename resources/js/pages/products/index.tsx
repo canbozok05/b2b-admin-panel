@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import products from '@/routes/products';
 
@@ -10,6 +10,7 @@ type Product = {
     stock_quantity: number;
     is_published: boolean;
     category: { id: number; name: string } | null;
+    images: { id: number; path: string }[];
 };
 
 type Props = {
@@ -36,7 +37,15 @@ export default function ProductIndex({ products: allProducts, filters }: Props) 
             <Head title="Ürünler" />
 
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
-                <h1 className="text-2xl font-semibold">Ürünler</h1>
+                <div className="flex items-center justify-between">
+                    <h1 className="text-2xl font-semibold">Ürünler</h1>
+                    <Link
+                        href={products.create.url()}
+                        className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
+                    >
+                        Yeni Ürün
+                    </Link>
+                </div>
 
                 <input
                     type="text"
@@ -49,6 +58,7 @@ export default function ProductIndex({ products: allProducts, filters }: Props) 
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b text-left">
+                            <th className="p-2">Görsel</th>
                             <th className="p-2">İsim</th>
                             <th className="p-2">SKU</th>
                             <th className="p-2">Kategori</th>
@@ -60,6 +70,16 @@ export default function ProductIndex({ products: allProducts, filters }: Props) 
                     <tbody>
                         {allProducts.map((product) => (
                             <tr key={product.id} className="border-b">
+                                <td className="p-2">
+                                    {product.images.length > 0 ? (
+                                        <img
+                                            src={`/storage/${product.images[0].path}`}
+                                            className="h-12 w-12 rounded-md border object-cover"
+                                        />
+                                    ) : (
+                                        <div className="h-12 w-12 rounded-md border bg-muted" />
+                                    )}
+                                </td>
                                 <td className="p-2">{product.name}</td>
                                 <td className="p-2">{product.sku}</td>
                                 <td className="p-2">
