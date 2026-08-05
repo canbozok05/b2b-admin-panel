@@ -1,5 +1,5 @@
-import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid, Tags, Package, ShoppingCart } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { BookOpen, FolderGit2, LayoutGrid, Tags, Package, ShoppingCart, Users } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -17,18 +17,24 @@ import { dashboard } from '@/routes';
 import categories from '@/routes/categories';
 import products from '@/routes/products';
 import orders from '@/routes/orders';
+import admins from '@/routes/admins';
 import type { NavItem } from '@/types';
+import type { Auth } from '@/types/auth';
 
-const mainNavItems: NavItem[] = [
+type NavItemWithRoles = NavItem & { roles?: string[] };
+
+const allNavItems: NavItemWithRoles[] = [
     {
         title: 'Ana Panel',
         href: dashboard(),
         icon: LayoutGrid,
+        roles: ['Süper Admin'],
     },
     {
         title: 'Kategoriler',
         href: categories.index(),
         icon: Tags,
+        roles: ['Süper Admin'],
     },
     {
         title: 'Ürünler',
@@ -39,6 +45,12 @@ const mainNavItems: NavItem[] = [
         title: 'Siparişler',
         href: orders.index(),
         icon: ShoppingCart,
+    },
+    {
+        title: 'Sistem Yöneticileri',
+        href: admins.index(),
+        icon: Users,
+        roles: ['Süper Admin'],
     },
 ];
 
@@ -56,6 +68,13 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { auth } = usePage().props as unknown as { auth: Auth };
+    const roles = auth.roles ?? [];
+
+    const mainNavItems = allNavItems.filter(
+        (item) => !item.roles || item.roles.some((role) => roles.includes(role)),
+    );
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>

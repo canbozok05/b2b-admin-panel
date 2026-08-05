@@ -1,6 +1,7 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import products from '@/routes/products';
+import type { Auth } from '@/types/auth';
 
 type Product = {
     id: number;
@@ -21,6 +22,9 @@ type Props = {
 };
 
 export default function ProductIndex({ products: allProducts, filters }: Props) {
+    const { auth } = usePage().props as unknown as { auth: Auth };
+    const isSuperAdmin = (auth.roles ?? []).includes('Süper Admin');
+
     const [search, setSearch] = useState(filters.search ?? '');
 
     function handleSearchChange(value: string) {
@@ -99,19 +103,21 @@ export default function ProductIndex({ products: allProducts, filters }: Props) 
                                         >
                                             Düzenle
                                         </Link>
-                                        <Link
-                                            href={products.destroy.url(product.id)}
-                                            method="delete"
-                                            as="button"
-                                            onClick={(e) => {
-                                                if (!confirm('Bu ürünü silmek istediğine emin misin?')) {
-                                                    e.preventDefault();
-                                                }
-                                            }}
-                                            className="text-destructive underline"
-                                        >
-                                            Sil
-                                        </Link>
+                                        {isSuperAdmin && (
+                                            <Link
+                                                href={products.destroy.url(product.id)}
+                                                method="delete"
+                                                as="button"
+                                                onClick={(e) => {
+                                                    if (!confirm('Bu ürünü silmek istediğine emin misin?')) {
+                                                        e.preventDefault();
+                                                    }
+                                                }}
+                                                className="text-destructive underline"
+                                            >
+                                                Sil
+                                            </Link>
+                                        )}
                                     </div>
                                 </td>
                             </tr>
