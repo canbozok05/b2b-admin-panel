@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
+use App\Mail\OrderStatusUpdated;
+use Illuminate\Support\Facades\Mail;
 
 class OrderController extends Controller
 {
@@ -37,6 +39,8 @@ class OrderController extends Controller
 
         $order = Order::find($id);
         $order->update(['status' => $validated['status']]);
+
+        Mail::to($order->customer->email)->send(new OrderStatusUpdated($order));
 
         Inertia::flash('toast', [
             'type' => 'success',
