@@ -1,34 +1,38 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\Product;
-use Inertia\Inertia;
-use App\Models\Category;
-use Illuminate\Support\Facades\Storage;
 
+use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class ProductController extends Controller
 {
-    public function index(Request $request){
-        $products = Product::with('category','images')
-            ->when ($request->search, function ($query, $search){
-                $query->where('name','like', "%{$search}%");
+    public function index(Request $request)
+    {
+        $products = Product::with('category', 'images')
+            ->when($request->search, function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%");
             })
             ->get();
 
-        return Inertia::render('products/index',[
+        return Inertia::render('products/index', [
             'products' => $products,
             'filters' => $request->only('search'),
         ]);
     }
-    public function create(){
+
+    public function create()
+    {
         return Inertia::render('products/create', [
             'categories' => Category::all(),
         ]);
     }
 
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
@@ -64,7 +68,8 @@ class ProductController extends Controller
         return redirect()->route('products.index');
     }
 
-    public function edit($id){
+    public function edit($id)
+    {
         $product = Product::with('images')->find($id);
 
         return Inertia::render('products/edit', [
@@ -73,13 +78,14 @@ class ProductController extends Controller
         ]);
     }
 
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)
+    {
         $product = Product::find($id);
 
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|unique:products,sku,' . $id,
+            'sku' => 'required|string|unique:products,sku,'.$id,
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'stock_quantity' => 'required|integer|min:0',
@@ -99,7 +105,7 @@ class ProductController extends Controller
             'is_published' => $validated['is_published'] ?? false,
         ]);
 
-        if (!empty($validated['delete_image_ids'])) {
+        if (! empty($validated['delete_image_ids'])) {
             $imagesToDelete = $product->images()->whereIn('id', $validated['delete_image_ids'])->get();
 
             foreach ($imagesToDelete as $image) {
@@ -121,7 +127,8 @@ class ProductController extends Controller
         return redirect()->route('products.index');
     }
 
-    public function destroy($id){
+    public function destroy($id)
+    {
         $product = Product::with('images')->find($id);
 
         if ($product->orderItems()->exists()) {
@@ -141,5 +148,4 @@ class ProductController extends Controller
 
         return redirect()->route('products.index');
     }
-
 }

@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
-use Inertia\Inertia;
-use Illuminate\Http\Request;
 use App\Mail\OrderStatusUpdated;
+use App\Models\Order;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Inertia\Inertia;
 
 class OrderController extends Controller
 {

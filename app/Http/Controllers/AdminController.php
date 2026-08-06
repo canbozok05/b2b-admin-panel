@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Inertia\Inertia;
 use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
+use Inertia\Inertia;
+use Spatie\Permission\Models\Role;
 
 class AdminController extends Controller
 {
@@ -62,7 +62,7 @@ class AdminController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $id,
+            'email' => 'required|email|unique:users,email,'.$id,
             'password' => 'nullable|string|min:8',
             'role' => 'required|exists:roles,name',
         ]);
