@@ -18,7 +18,8 @@ class CategoryFactory extends Factory
      */
     public function definition(): array
     {
-        $name = ucfirst(fake()->words(2, true));
+        $words = fake()->words(2);
+        $name = ucfirst(implode(' ', is_array($words) ? $words : [$words]));
 
         return [
             'name' => $name,

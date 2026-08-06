@@ -2,21 +2,31 @@
 
 namespace App\Models;
 
+use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['customer_id', 'order_number', 'total_amount', 'status'])]
 class Order extends Model
 {
+    /** @use HasFactory<OrderFactory> */
     use HasFactory;
 
-    public function customer()
+    /**
+     * @return BelongsTo<Customer, $this>
+     */
+    public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
 
-    public function orderItems()
+    /**
+     * @return HasMany<OrderItem, $this>
+     */
+    public function orderItems(): HasMany
     {
         return $this->hasMany(OrderItem::class);
     }

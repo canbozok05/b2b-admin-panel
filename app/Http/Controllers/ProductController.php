@@ -4,13 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class ProductController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $products = Product::with('category', 'images')
             ->when($request->search, function ($query, $search) {
@@ -24,14 +26,14 @@ class ProductController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(): Response
     {
         return Inertia::render('products/create', [
             'categories' => Category::all(),
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
@@ -68,9 +70,9 @@ class ProductController extends Controller
         return redirect()->route('products.index');
     }
 
-    public function edit($id)
+    public function edit(int $id): Response
     {
-        $product = Product::with('images')->find($id);
+        $product = Product::with('images')->findOrFail($id);
 
         return Inertia::render('products/edit', [
             'product' => $product,
@@ -78,9 +80,9 @@ class ProductController extends Controller
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id): RedirectResponse
     {
-        $product = Product::find($id);
+        $product = Product::findOrFail($id);
 
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
@@ -127,9 +129,9 @@ class ProductController extends Controller
         return redirect()->route('products.index');
     }
 
-    public function destroy($id)
+    public function destroy(int $id): RedirectResponse
     {
-        $product = Product::with('images')->find($id);
+        $product = Product::with('images')->findOrFail($id);
 
         if ($product->orderItems()->exists()) {
             Inertia::flash('toast', [

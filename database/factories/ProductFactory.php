@@ -18,9 +18,12 @@ class ProductFactory extends Factory
      */
     public function definition(): array
     {
+        $words = fake()->words(3);
+        $name = ucfirst(implode(' ', is_array($words) ? $words : [$words]));
+
         return [
             'category_id' => Category::factory(),
-            'name' => ucfirst(fake()->words(3, true)),
+            'name' => $name,
             'sku' => strtoupper(fake()->bothify('???-###')),
             'description' => fake()->paragraph(),
             'price' => fake()->randomFloat(2, 10, 5000),

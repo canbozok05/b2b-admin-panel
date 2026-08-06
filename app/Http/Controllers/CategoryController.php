@@ -3,25 +3,27 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(): Response
     {
         return Inertia::render('categories/index', [
             'categories' => Category::with('parent')->get(),
         ]);
     }
 
-    public function create()
+    public function create(): Response
     {
         return Inertia::render('categories/create', ['categories' => Category::all()]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -39,17 +41,17 @@ class CategoryController extends Controller
         return redirect()->route('categories.index');
     }
 
-    public function edit($id)
+    public function edit(int $id): Response
     {
         return Inertia::render('categories/edit', [
-            'category' => Category::find($id),
+            'category' => Category::findOrFail($id),
             'categories' => Category::all(),
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id): RedirectResponse
     {
-        $category = Category::find($id);
+        $category = Category::findOrFail($id);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -67,9 +69,9 @@ class CategoryController extends Controller
         return redirect()->route('categories.index');
     }
 
-    public function destroy($id)
+    public function destroy(int $id): RedirectResponse
     {
-        $category = Category::find($id);
+        $category = Category::findOrFail($id);
 
         if ($category->products()->exists() || $category->children()->exists()) {
             Inertia::flash('toast', [

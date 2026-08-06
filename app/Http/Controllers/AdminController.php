@@ -3,14 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
+use Inertia\Response;
 use Spatie\Permission\Models\Role;
 
 class AdminController extends Controller
 {
-    public function index()
+    public function index(): Response
     {
         $users = User::with('roles')->get();
 
@@ -19,14 +21,14 @@ class AdminController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(): Response
     {
         return Inertia::render('admins/create', [
             'roles' => Role::all(),
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -46,9 +48,9 @@ class AdminController extends Controller
         return redirect()->route('admins.index');
     }
 
-    public function edit($id)
+    public function edit(int $id): Response
     {
-        $user = User::with('roles')->find($id);
+        $user = User::with('roles')->findOrFail($id);
 
         return Inertia::render('admins/edit', [
             'admin' => $user,
@@ -56,9 +58,9 @@ class AdminController extends Controller
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id): RedirectResponse
     {
-        $user = User::find($id);
+        $user = User::findOrFail($id);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -78,7 +80,7 @@ class AdminController extends Controller
         return redirect()->route('admins.index');
     }
 
-    public function destroy(Request $request, $id)
+    public function destroy(Request $request, int $id): RedirectResponse
     {
         if ($request->user()->id == $id) {
             Inertia::flash('toast', [
@@ -89,7 +91,7 @@ class AdminController extends Controller
             return redirect()->route('admins.index');
         }
 
-        $user = User::find($id);
+        $user = User::findOrFail($id);
         $user->delete();
 
         return redirect()->route('admins.index');
