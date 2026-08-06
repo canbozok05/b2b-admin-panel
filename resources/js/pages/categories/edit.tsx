@@ -32,7 +32,10 @@ export default function CategoryEdit({ category, categories }: Props) {
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
                 <h1 className="text-2xl font-semibold">Kategori Düzenle</h1>
 
-                <form onSubmit={handleSubmit} className="flex max-w-md flex-col gap-4">
+                <form
+                    onSubmit={handleSubmit}
+                    className="flex max-w-md flex-col gap-4"
+                >
                     <div>
                         <label className="text-sm font-medium">İsim</label>
                         <input
@@ -42,15 +45,21 @@ export default function CategoryEdit({ category, categories }: Props) {
                             className="w-full rounded-md border p-2"
                         />
                         {errors.name && (
-                            <p className="text-sm text-destructive">{errors.name}</p>
+                            <p className="text-sm text-destructive">
+                                {errors.name}
+                            </p>
                         )}
                     </div>
 
                     <div>
-                        <label className="text-sm font-medium">Üst Kategori</label>
+                        <label className="text-sm font-medium">
+                            Üst Kategori
+                        </label>
                         <select
                             value={data.parent_id}
-                            onChange={(e) => setData('parent_id', e.target.value)}
+                            onChange={(e) =>
+                                setData('parent_id', e.target.value)
+                            }
                             className="w-full rounded-md border p-2"
                         >
                             <option value="">Yok</option>
@@ -68,10 +77,15 @@ export default function CategoryEdit({ category, categories }: Props) {
                         <input
                             type="checkbox"
                             checked={data.is_active}
-                            onChange={(e) => setData('is_active', e.target.checked)}
+                            onChange={(e) =>
+                                setData('is_active', e.target.checked)
+                            }
                             id="is_active"
                         />
-                        <label htmlFor="is_active" className="text-sm font-medium">
+                        <label
+                            htmlFor="is_active"
+                            className="text-sm font-medium"
+                        >
                             Aktif
                         </label>
                     </div>

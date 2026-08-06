@@ -62,7 +62,9 @@ export default function OrderIndex({ orders: allOrders }: Props) {
                                     {statusLabels[order.status] ?? order.status}
                                 </td>
                                 <td className="p-2">
-                                    {new Date(order.created_at).toLocaleDateString('tr-TR')}
+                                    {new Date(
+                                        order.created_at,
+                                    ).toLocaleDateString('tr-TR')}
                                 </td>
                             </tr>
                         ))}

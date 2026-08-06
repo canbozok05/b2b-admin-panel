@@ -43,7 +43,9 @@ export default function CategoryIndex({ categories }: Props) {
                             <tr key={category.id} className="border-b">
                                 <td className="p-2">{category.name}</td>
                                 <td className="p-2">
-                                    {category.parent ? category.parent.name : '—'}
+                                    {category.parent
+                                        ? category.parent.name
+                                        : '—'}
                                 </td>
                                 <td className="p-2">
                                     {category.is_active ? 'Aktif' : 'Pasif'}
@@ -51,17 +53,25 @@ export default function CategoryIndex({ categories }: Props) {
                                 <td className="p-2">
                                     <div className="flex gap-3">
                                         <Link
-                                            href={categoryRoutes.edit.url(category.id)}
+                                            href={categoryRoutes.edit.url(
+                                                category.id,
+                                            )}
                                             className="text-primary underline"
                                         >
                                             Düzenle
                                         </Link>
                                         <Link
-                                            href={categoryRoutes.destroy.url(category.id)}
+                                            href={categoryRoutes.destroy.url(
+                                                category.id,
+                                            )}
                                             method="delete"
                                             as="button"
                                             onClick={(e) => {
-                                                if (!confirm('Bu kategoriyi silmek istediğine emin misin?')) {
+                                                if (
+                                                    !confirm(
+                                                        'Bu kategoriyi silmek istediğine emin misin?',
+                                                    )
+                                                ) {
                                                     e.preventDefault();
                                                 }
                                             }}

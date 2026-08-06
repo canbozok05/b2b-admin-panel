@@ -60,7 +60,9 @@ export default function OrderShow({ order }: Props) {
                         {order.customer ? (
                             <div className="flex flex-col gap-1 text-sm">
                                 <p>{order.customer.name}</p>
-                                <p className="text-muted-foreground">{order.customer.email}</p>
+                                <p className="text-muted-foreground">
+                                    {order.customer.email}
+                                </p>
                                 <p className="text-muted-foreground">
                                     {order.customer.phone ?? '—'}
                                 </p>
@@ -69,23 +71,32 @@ export default function OrderShow({ order }: Props) {
                                 </p>
                             </div>
                         ) : (
-                            <p className="text-sm text-muted-foreground">Müşteri bulunamadı</p>
+                            <p className="text-sm text-muted-foreground">
+                                Müşteri bulunamadı
+                            </p>
                         )}
                     </div>
 
                     <div className="rounded-xl border bg-card p-5">
                         <h2 className="mb-3 text-lg font-semibold">Durum</h2>
-                        <form onSubmit={handleStatusSubmit} className="flex flex-col gap-3">
+                        <form
+                            onSubmit={handleStatusSubmit}
+                            className="flex flex-col gap-3"
+                        >
                             <select
                                 value={data.status}
-                                onChange={(e) => setData('status', e.target.value)}
+                                onChange={(e) =>
+                                    setData('status', e.target.value)
+                                }
                                 className="w-full rounded-md border p-2"
                             >
-                                {Object.entries(statusLabels).map(([value, label]) => (
-                                    <option key={value} value={value}>
-                                        {label}
-                                    </option>
-                                ))}
+                                {Object.entries(statusLabels).map(
+                                    ([value, label]) => (
+                                        <option key={value} value={value}>
+                                            {label}
+                                        </option>
+                                    ),
+                                )}
                             </select>
                             <button
                                 type="submit"

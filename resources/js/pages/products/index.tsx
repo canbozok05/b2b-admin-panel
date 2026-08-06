@@ -21,7 +21,10 @@ type Props = {
     };
 };
 
-export default function ProductIndex({ products: allProducts, filters }: Props) {
+export default function ProductIndex({
+    products: allProducts,
+    filters,
+}: Props) {
     const { auth } = usePage().props as unknown as { auth: Auth };
     const isSuperAdmin = (auth.roles ?? []).includes('Süper Admin');
 
@@ -88,12 +91,18 @@ export default function ProductIndex({ products: allProducts, filters }: Props) 
                                 <td className="p-2">{product.name}</td>
                                 <td className="p-2">{product.sku}</td>
                                 <td className="p-2">
-                                    {product.category ? product.category.name : '—'}
+                                    {product.category
+                                        ? product.category.name
+                                        : '—'}
                                 </td>
                                 <td className="p-2">{product.price}</td>
-                                <td className="p-2">{product.stock_quantity}</td>
                                 <td className="p-2">
-                                    {product.is_published ? 'Yayında' : 'Taslak'}
+                                    {product.stock_quantity}
+                                </td>
+                                <td className="p-2">
+                                    {product.is_published
+                                        ? 'Yayında'
+                                        : 'Taslak'}
                                 </td>
                                 <td className="p-2">
                                     <div className="flex gap-3">
@@ -105,11 +114,17 @@ export default function ProductIndex({ products: allProducts, filters }: Props) 
                                         </Link>
                                         {isSuperAdmin && (
                                             <Link
-                                                href={products.destroy.url(product.id)}
+                                                href={products.destroy.url(
+                                                    product.id,
+                                                )}
                                                 method="delete"
                                                 as="button"
                                                 onClick={(e) => {
-                                                    if (!confirm('Bu ürünü silmek istediğine emin misin?')) {
+                                                    if (
+                                                        !confirm(
+                                                            'Bu ürünü silmek istediğine emin misin?',
+                                                        )
+                                                    ) {
                                                         e.preventDefault();
                                                     }
                                                 }}

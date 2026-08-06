@@ -24,7 +24,9 @@ export default function AdminIndex({ users }: Props) {
 
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold">Sistem Yöneticileri</h1>
+                    <h1 className="text-2xl font-semibold">
+                        Sistem Yöneticileri
+                    </h1>
                     <Link
                         href={admins.create.url()}
                         className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
@@ -49,7 +51,9 @@ export default function AdminIndex({ users }: Props) {
                                 <td className="p-2">{user.email}</td>
                                 <td className="p-2">
                                     {user.roles.length > 0
-                                        ? user.roles.map((role) => role.name).join(', ')
+                                        ? user.roles
+                                              .map((role) => role.name)
+                                              .join(', ')
                                         : '—'}
                                 </td>
                                 <td className="p-2">
@@ -65,7 +69,11 @@ export default function AdminIndex({ users }: Props) {
                                             method="delete"
                                             as="button"
                                             onClick={(e) => {
-                                                if (!confirm('Bu yöneticiyi silmek istediğine emin misin?')) {
+                                                if (
+                                                    !confirm(
+                                                        'Bu yöneticiyi silmek istediğine emin misin?',
+                                                    )
+                                                ) {
                                                     e.preventDefault();
                                                 }
                                             }}

@@ -1,7 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import products from '@/routes/products';
 import RichTextEditor from '@/components/rich-text-editor';
+import products from '@/routes/products';
 
 type ProductImage = {
     id: number;
@@ -73,7 +73,10 @@ export default function ProductEdit({ product, categories }: Props) {
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
                 <h1 className="text-2xl font-semibold">Ürün Düzenle</h1>
 
-                <form onSubmit={handleSubmit} className="flex max-w-xl flex-col gap-4">
+                <form
+                    onSubmit={handleSubmit}
+                    className="flex max-w-xl flex-col gap-4"
+                >
                     <div>
                         <label className="text-sm font-medium">İsim</label>
                         <input
@@ -82,7 +85,11 @@ export default function ProductEdit({ product, categories }: Props) {
                             onChange={(e) => setData('name', e.target.value)}
                             className="w-full rounded-md border p-2"
                         />
-                        {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+                        {errors.name && (
+                            <p className="text-sm text-destructive">
+                                {errors.name}
+                            </p>
+                        )}
                     </div>
 
                     <div>
@@ -93,14 +100,20 @@ export default function ProductEdit({ product, categories }: Props) {
                             onChange={(e) => setData('sku', e.target.value)}
                             className="w-full rounded-md border p-2"
                         />
-                        {errors.sku && <p className="text-sm text-destructive">{errors.sku}</p>}
+                        {errors.sku && (
+                            <p className="text-sm text-destructive">
+                                {errors.sku}
+                            </p>
+                        )}
                     </div>
 
                     <div>
                         <label className="text-sm font-medium">Kategori</label>
                         <select
                             value={data.category_id}
-                            onChange={(e) => setData('category_id', e.target.value)}
+                            onChange={(e) =>
+                                setData('category_id', e.target.value)
+                            }
                             className="w-full rounded-md border p-2"
                         >
                             {categories.map((category) => (
@@ -110,7 +123,9 @@ export default function ProductEdit({ product, categories }: Props) {
                             ))}
                         </select>
                         {errors.category_id && (
-                            <p className="text-sm text-destructive">{errors.category_id}</p>
+                            <p className="text-sm text-destructive">
+                                {errors.category_id}
+                            </p>
                         )}
                     </div>
 
@@ -131,19 +146,29 @@ export default function ProductEdit({ product, categories }: Props) {
                             onChange={(e) => setData('price', e.target.value)}
                             className="w-full rounded-md border p-2"
                         />
-                        {errors.price && <p className="text-sm text-destructive">{errors.price}</p>}
+                        {errors.price && (
+                            <p className="text-sm text-destructive">
+                                {errors.price}
+                            </p>
+                        )}
                     </div>
 
                     <div>
-                        <label className="text-sm font-medium">Stok Miktarı</label>
+                        <label className="text-sm font-medium">
+                            Stok Miktarı
+                        </label>
                         <input
                             type="number"
                             value={data.stock_quantity}
-                            onChange={(e) => setData('stock_quantity', e.target.value)}
+                            onChange={(e) =>
+                                setData('stock_quantity', e.target.value)
+                            }
                             className="w-full rounded-md border p-2"
                         />
                         {errors.stock_quantity && (
-                            <p className="text-sm text-destructive">{errors.stock_quantity}</p>
+                            <p className="text-sm text-destructive">
+                                {errors.stock_quantity}
+                            </p>
                         )}
                     </div>
 
@@ -151,28 +176,40 @@ export default function ProductEdit({ product, categories }: Props) {
                         <input
                             type="checkbox"
                             checked={data.is_published}
-                            onChange={(e) => setData('is_published', e.target.checked)}
+                            onChange={(e) =>
+                                setData('is_published', e.target.checked)
+                            }
                             id="is_published"
                         />
-                        <label htmlFor="is_published" className="text-sm font-medium">
+                        <label
+                            htmlFor="is_published"
+                            className="text-sm font-medium"
+                        >
                             Yayında
                         </label>
                     </div>
 
                     {product.images.length > 0 && (
                         <div>
-                            <label className="text-sm font-medium">Mevcut Görseller</label>
+                            <label className="text-sm font-medium">
+                                Mevcut Görseller
+                            </label>
                             <p className="text-xs text-muted-foreground">
                                 Silmek istediğin görsele tıkla, işaretlensin.
                             </p>
                             <div className="mt-2 flex flex-wrap gap-2">
                                 {product.images.map((image) => {
-                                    const marked = deleteImageIds.includes(image.id);
+                                    const marked = deleteImageIds.includes(
+                                        image.id,
+                                    );
+
                                     return (
                                         <button
                                             type="button"
                                             key={image.id}
-                                            onClick={() => toggleDeleteImage(image.id)}
+                                            onClick={() =>
+                                                toggleDeleteImage(image.id)
+                                            }
                                             className={`relative h-20 w-20 overflow-hidden rounded-md border-2 ${marked ? 'border-destructive opacity-40' : 'border-transparent'}`}
                                         >
                                             <img
@@ -187,7 +224,9 @@ export default function ProductEdit({ product, categories }: Props) {
                     )}
 
                     <div>
-                        <label className="text-sm font-medium">Yeni Görsel Ekle</label>
+                        <label className="text-sm font-medium">
+                            Yeni Görsel Ekle
+                        </label>
                         <input
                             type="file"
                             multiple
@@ -196,7 +235,9 @@ export default function ProductEdit({ product, categories }: Props) {
                             className="w-full rounded-md border p-2"
                         />
                         {errors.images && (
-                            <p className="text-sm text-destructive">{errors.images}</p>
+                            <p className="text-sm text-destructive">
+                                {errors.images}
+                            </p>
                         )}
 
                         {previews.length > 0 && (

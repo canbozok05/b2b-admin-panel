@@ -1,5 +1,13 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid, Tags, Package, ShoppingCart, Users } from 'lucide-react';
+import {
+    BookOpen,
+    FolderGit2,
+    LayoutGrid,
+    Tags,
+    Package,
+    ShoppingCart,
+    Users,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -14,10 +22,10 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import categories from '@/routes/categories';
-import products from '@/routes/products';
-import orders from '@/routes/orders';
 import admins from '@/routes/admins';
+import categories from '@/routes/categories';
+import orders from '@/routes/orders';
+import products from '@/routes/products';
 import type { NavItem } from '@/types';
 import type { Auth } from '@/types/auth';
 
@@ -72,7 +80,8 @@ export function AppSidebar() {
     const roles = auth.roles ?? [];
 
     const mainNavItems = allNavItems.filter(
-        (item) => !item.roles || item.roles.some((role) => roles.includes(role)),
+        (item) =>
+            !item.roles || item.roles.some((role) => roles.includes(role)),
     );
 
     return (

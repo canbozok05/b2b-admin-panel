@@ -38,7 +38,10 @@ export default function AdminEdit({ admin, roles }: Props) {
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
                 <h1 className="text-2xl font-semibold">Yönetici Düzenle</h1>
 
-                <form onSubmit={handleSubmit} className="flex max-w-md flex-col gap-4">
+                <form
+                    onSubmit={handleSubmit}
+                    className="flex max-w-md flex-col gap-4"
+                >
                     <div>
                         <label className="text-sm font-medium">İsim</label>
                         <input
@@ -47,7 +50,11 @@ export default function AdminEdit({ admin, roles }: Props) {
                             onChange={(e) => setData('name', e.target.value)}
                             className="w-full rounded-md border p-2"
                         />
-                        {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+                        {errors.name && (
+                            <p className="text-sm text-destructive">
+                                {errors.name}
+                            </p>
+                        )}
                     </div>
 
                     <div>
@@ -59,7 +66,9 @@ export default function AdminEdit({ admin, roles }: Props) {
                             className="w-full rounded-md border p-2"
                         />
                         {errors.email && (
-                            <p className="text-sm text-destructive">{errors.email}</p>
+                            <p className="text-sm text-destructive">
+                                {errors.email}
+                            </p>
                         )}
                     </div>
 
@@ -70,11 +79,15 @@ export default function AdminEdit({ admin, roles }: Props) {
                         <input
                             type="password"
                             value={data.password}
-                            onChange={(e) => setData('password', e.target.value)}
+                            onChange={(e) =>
+                                setData('password', e.target.value)
+                            }
                             className="w-full rounded-md border p-2"
                         />
                         {errors.password && (
-                            <p className="text-sm text-destructive">{errors.password}</p>
+                            <p className="text-sm text-destructive">
+                                {errors.password}
+                            </p>
                         )}
                     </div>
 
@@ -91,7 +104,11 @@ export default function AdminEdit({ admin, roles }: Props) {
                                 </option>
                             ))}
                         </select>
-                        {errors.role && <p className="text-sm text-destructive">{errors.role}</p>}
+                        {errors.role && (
+                            <p className="text-sm text-destructive">
+                                {errors.role}
+                            </p>
+                        )}
                     </div>
 
                     <button

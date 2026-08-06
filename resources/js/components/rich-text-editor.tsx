@@ -43,7 +43,9 @@ export default function RichTextEditor({ value, onChange }: Props) {
                 </button>
                 <button
                     type="button"
-                    onClick={() => editor.chain().focus().toggleBulletList().run()}
+                    onClick={() =>
+                        editor.chain().focus().toggleBulletList().run()
+                    }
                     className={`rounded px-2 py-1 text-sm ${editor.isActive('bulletList') ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
                 >
                     Liste
