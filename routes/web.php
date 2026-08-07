@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Models\Customer;
@@ -18,7 +19,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('dashboard', function () {
             return Inertia::render('dashboard', [
                 'totalCustomers' => Customer::count(),
-                'monthlySales' => Order::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->sum('total_amount'),
+                'monthlySales' => Order::whereMonth('created_at', now()->month)
+                    ->whereYear('created_at', now()->year)
+                    ->whereNotIn('status', ['pending', 'cancelled'])
+                    ->sum('total_amount'),
                 'pendingOrders' => Order::where('status', 'pending')->count(),
                 'criticalStock' => Product::where('stock_quantity', '<', 10)->count(),
                 'lowStockProducts' => Product::where('stock_quantity', '<', 10)->get(['name', 'stock_quantity']),
@@ -39,6 +43,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('categories/{id}', [CategoryController::class, 'destroy'])->name('categories.destroy');
 
         Route::delete('products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
+
+        Route::get('musteriler', [CustomerController::class, 'index'])->name('customers.index');
+        Route::get('musteriler/create', [CustomerController::class, 'create'])->name('customers.create');
+        Route::post('musteriler', [CustomerController::class, 'store'])->name('customers.store');
+        Route::get('musteriler/{id}/edit', [CustomerController::class, 'edit'])->name('customers.edit');
+        Route::put('musteriler/{id}', [CustomerController::class, 'update'])->name('customers.update');
+        Route::delete('musteriler/{id}', [CustomerController::class, 'destroy'])->name('customers.destroy');
 
         Route::get('sistem-yoneticileri', [AdminController::class, 'index'])->name('admins.index');
         Route::get('sistem-yoneticileri/create', [AdminController::class, 'create'])->name('admins.create');

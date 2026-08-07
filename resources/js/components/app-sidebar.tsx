@@ -7,6 +7,7 @@ import {
     Package,
     ShoppingCart,
     Users,
+    Contact,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -24,6 +25,7 @@ import {
 import { dashboard } from '@/routes';
 import admins from '@/routes/admins';
 import categories from '@/routes/categories';
+import customers from '@/routes/customers';
 import orders from '@/routes/orders';
 import products from '@/routes/products';
 import type { NavItem } from '@/types';
@@ -53,6 +55,12 @@ const allNavItems: NavItemWithRoles[] = [
         title: 'Siparişler',
         href: orders.index(),
         icon: ShoppingCart,
+    },
+    {
+        title: 'Müşteriler',
+        href: customers.index(),
+        icon: Contact,
+        roles: ['Süper Admin'],
     },
     {
         title: 'Sistem Yöneticileri',
