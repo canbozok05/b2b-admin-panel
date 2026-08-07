@@ -1,5 +1,7 @@
 # B2B Yönetim Paneli
 
+[![tests](https://github.com/canbozok05/b2b-admin-panel/actions/workflows/tests.yml/badge.svg)](https://github.com/canbozok05/b2b-admin-panel/actions/workflows/tests.yml)
+
 Bir toptancı/e-ticaret firmasının envanter ve sipariş süreçlerini yönettiği bir **Admin Panel (Back-office)** uygulaması. Laravel + React + Inertia.js ile geliştirilmiştir.
 
 Bu proje bir **staj çalışması** olarak, sıfırdan öğrenilerek geliştirilmiştir.
@@ -45,3 +47,13 @@ composer dev
 ```
 
 Bu komut Laravel sunucusunu, kuyruk dinleyicisini ve Vite'ı birlikte başlatır.
+
+## Testler
+
+Rol tabanlı erişim kontrolü (Süper Admin / Depo Görevlisi), kategori/ürün silme kısıtlamaları ve sipariş durumu güncellemesi (email bildirimi dahil) için Pest ile yazılmış bir test paketi bulunuyor.
+
+```bash
+php artisan test
+```
+
+Her `push` sonrası GitHub Actions üzerinde otomatik olarak çalışır (kod stili, tip kontrolü ve testler dahil).
