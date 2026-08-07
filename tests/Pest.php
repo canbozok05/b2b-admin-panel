@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 /*
@@ -44,7 +46,26 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function actingAsSuperAdmin(): User
 {
-    // ..
+    Role::findOrCreate('Süper Admin');
+
+    $user = User::factory()->create();
+    $user->assignRole('Süper Admin');
+
+    test()->actingAs($user);
+
+    return $user;
+}
+
+function actingAsDepoGorevlisi(): User
+{
+    Role::findOrCreate('Depo Görevlisi');
+
+    $user = User::factory()->create();
+    $user->assignRole('Depo Görevlisi');
+
+    test()->actingAs($user);
+
+    return $user;
 }
