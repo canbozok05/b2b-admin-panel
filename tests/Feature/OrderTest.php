@@ -1,7 +1,9 @@
 <?php
 
 use App\Mail\OrderStatusUpdated;
+use App\Models\Customer;
 use App\Models\Order;
+use App\Models\Product;
 use Illuminate\Support\Facades\Mail;
 
 test('depo görevlisi can update an order status', function () {
@@ -50,4 +52,131 @@ test('updating an order status sends the customer an email', function () {
     ]);
 
     Mail::assertSent(OrderStatusUpdated::class);
+});
+
+test('creating an order deducts stock and snapshots the unit price', function () {
+    actingAsSuperAdmin();
+
+    $customer = Customer::factory()->create();
+    $product = Product::factory()->create(['stock_quantity' => 10, 'price' => 50]);
+
+    $response = $this->post(route('orders.store'), [
+        'customer_id' => $customer->id,
+        'items' => [
+            ['product_id' => $product->id, 'quantity' => 3],
+        ],
+    ]);
+
+    $response->assertRedirect(route('orders.index'));
+
+    $this->assertDatabaseHas('products', [
+        'id' => $product->id,
+        'stock_quantity' => 7,
+    ]);
+
+    $order = Order::latest()->first();
+    expect($order->total_amount)->toEqual(150);
+
+    $this->assertDatabaseHas('order_items', [
+        'order_id' => $order->id,
+        'product_id' => $product->id,
+        'quantity' => 3,
+        'unit_price' => 50,
+    ]);
+});
+
+test('an order cannot be created for more than the available stock', function () {
+    actingAsSuperAdmin();
+
+    $customer = Customer::factory()->create();
+    $product = Product::factory()->create(['stock_quantity' => 2]);
+
+    $response = $this->post(route('orders.store'), [
+        'customer_id' => $customer->id,
+        'items' => [
+            ['product_id' => $product->id, 'quantity' => 5],
+        ],
+    ]);
+
+    $response->assertSessionHasErrors('items');
+    $this->assertDatabaseHas('products', [
+        'id' => $product->id,
+        'stock_quantity' => 2,
+    ]);
+    $this->assertDatabaseCount('orders', 0);
+});
+
+test('editing an order reconciles stock correctly', function () {
+    actingAsSuperAdmin();
+
+    $customer = Customer::factory()->create();
+    $productA = Product::factory()->create(['stock_quantity' => 10, 'price' => 20]);
+    $productB = Product::factory()->create(['stock_quantity' => 10, 'price' => 30]);
+
+    $this->post(route('orders.store'), [
+        'customer_id' => $customer->id,
+        'items' => [
+            ['product_id' => $productA->id, 'quantity' => 4],
+        ],
+    ]);
+
+    $productA->refresh();
+    expect($productA->stock_quantity)->toBe(6);
+
+    $order = Order::latest()->first();
+
+    $response = $this->put(route('orders.update', $order->id), [
+        'customer_id' => $customer->id,
+        'items' => [
+            ['product_id' => $productB->id, 'quantity' => 2],
+        ],
+    ]);
+
+    $response->assertRedirect(route('orders.index'));
+
+    $productA->refresh();
+    $productB->refresh();
+
+    // productA's stock is restored since it's no longer on the order.
+    expect($productA->stock_quantity)->toBe(10);
+    // productB's stock is freshly deducted.
+    expect($productB->stock_quantity)->toBe(8);
+
+    $order->refresh();
+    expect($order->total_amount)->toEqual(60);
+});
+
+test('deleting an order restores stock', function () {
+    actingAsSuperAdmin();
+
+    $customer = Customer::factory()->create();
+    $product = Product::factory()->create(['stock_quantity' => 10, 'price' => 20]);
+
+    $this->post(route('orders.store'), [
+        'customer_id' => $customer->id,
+        'items' => [
+            ['product_id' => $product->id, 'quantity' => 4],
+        ],
+    ]);
+
+    $product->refresh();
+    expect($product->stock_quantity)->toBe(6);
+
+    $order = Order::latest()->first();
+
+    $response = $this->delete(route('orders.destroy', $order->id));
+
+    $response->assertRedirect(route('orders.index'));
+
+    $product->refresh();
+    expect($product->stock_quantity)->toBe(10);
+    $this->assertDatabaseMissing('orders', ['id' => $order->id]);
+});
+
+test('depo görevlisi cannot create an order', function () {
+    actingAsDepoGorevlisi();
+
+    $response = $this->get(route('orders.create'));
+
+    $response->assertForbidden();
 });

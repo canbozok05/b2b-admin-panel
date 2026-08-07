@@ -51,6 +51,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('musteriler/{id}', [CustomerController::class, 'update'])->name('customers.update');
         Route::delete('musteriler/{id}', [CustomerController::class, 'destroy'])->name('customers.destroy');
 
+        Route::get('orders/create', [OrderController::class, 'create'])->name('orders.create');
+        Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
+        Route::get('orders/{id}/edit', [OrderController::class, 'edit'])->name('orders.edit');
+        Route::put('orders/{id}', [OrderController::class, 'update'])->name('orders.update');
+        Route::delete('orders/{id}', [OrderController::class, 'destroy'])->name('orders.destroy');
+
         Route::get('sistem-yoneticileri', [AdminController::class, 'index'])->name('admins.index');
         Route::get('sistem-yoneticileri/create', [AdminController::class, 'create'])->name('admins.create');
         Route::post('sistem-yoneticileri', [AdminController::class, 'store'])->name('admins.store');
