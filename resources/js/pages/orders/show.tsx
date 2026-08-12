@@ -5,7 +5,12 @@ type OrderItem = {
     id: number;
     quantity: number;
     unit_price: string;
-    product: { id: number; name: string; sku: string } | null;
+    product: {
+        id: number;
+        name: string;
+        sku: string;
+        category: { id: number; vat_rate: string } | null;
+    } | null;
 };
 
 type Order = {
@@ -35,10 +40,31 @@ const statusLabels: Record<string, string> = {
     cancelled: 'İptal',
 };
 
+function lineVat(item: OrderItem): { rate: number; amount: number } {
+    if (!item.product || !item.product.category) {
+        return { rate: 0, amount: 0 };
+    }
+
+    const rate = Number(item.product.category.vat_rate);
+    const gross = Number(item.unit_price) * item.quantity;
+    const net = gross / (1 + rate / 100);
+
+    return { rate, amount: gross - net };
+}
+
+function formatTl(value: number): string {
+    return value.toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+}
+
 export default function OrderShow({ order }: Props) {
     const { data, setData, patch, processing } = useForm({
         status: order.status,
     });
+
+    const totalVat = order.order_items.reduce(
+        (sum, item) => sum + lineVat(item).amount,
+        0,
+    );
 
     function handleStatusSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -118,27 +144,47 @@ export default function OrderShow({ order }: Props) {
                                 <th className="p-2">SKU</th>
                                 <th className="p-2">Adet</th>
                                 <th className="p-2">Birim Fiyat</th>
+                                <th className="p-2">KDV</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {order.order_items.map((item) => (
-                                <tr key={item.id} className="border-b">
-                                    <td className="p-2">
-                                        {item.product ? item.product.name : '—'}
-                                    </td>
-                                    <td className="p-2">
-                                        {item.product ? item.product.sku : '—'}
-                                    </td>
-                                    <td className="p-2">{item.quantity}</td>
-                                    <td className="p-2">{item.unit_price}</td>
-                                </tr>
-                            ))}
+                            {order.order_items.map((item) => {
+                                const vat = lineVat(item);
+
+                                return (
+                                    <tr key={item.id} className="border-b">
+                                        <td className="p-2">
+                                            {item.product
+                                                ? item.product.name
+                                                : '—'}
+                                        </td>
+                                        <td className="p-2">
+                                            {item.product
+                                                ? item.product.sku
+                                                : '—'}
+                                        </td>
+                                        <td className="p-2">{item.quantity}</td>
+                                        <td className="p-2">
+                                            {item.unit_price}
+                                        </td>
+                                        <td className="p-2">
+                                            %{vat.rate} ({formatTl(vat.amount)}{' '}
+                                            ₺)
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
 
-                    <p className="mt-4 text-right text-lg font-semibold">
-                        Toplam: {order.total_amount}
-                    </p>
+                    <div className="mt-4 flex flex-col items-end gap-1">
+                        <p className="text-sm text-muted-foreground">
+                            Toplam KDV: {formatTl(totalVat)} ₺
+                        </p>
+                        <p className="text-lg font-semibold">
+                            Toplam: {order.total_amount}
+                        </p>
+                    </div>
                 </div>
             </div>
         </>

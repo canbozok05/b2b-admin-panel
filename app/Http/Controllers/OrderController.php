@@ -29,7 +29,7 @@ class OrderController extends Controller
 
     public function show(int $id): Response
     {
-        $order = Order::with('customer', 'orderItems.product')->findOrFail($id);
+        $order = Order::with('customer', 'orderItems.product.category')->findOrFail($id);
 
         return Inertia::render('orders/show', [
             'order' => $order,
@@ -40,7 +40,8 @@ class OrderController extends Controller
     {
         return Inertia::render('orders/create', [
             'customers' => Customer::all(),
-            'products' => Product::all(['id', 'name', 'sku', 'price', 'stock_quantity']),
+            'products' => Product::with('category:id,vat_rate')
+                ->get(['id', 'category_id', 'name', 'sku', 'price', 'stock_quantity']),
         ]);
     }
 
@@ -104,7 +105,8 @@ class OrderController extends Controller
         return Inertia::render('orders/edit', [
             'order' => $order,
             'customers' => Customer::all(),
-            'products' => Product::all(['id', 'name', 'sku', 'price', 'stock_quantity']),
+            'products' => Product::with('category:id,vat_rate')
+                ->get(['id', 'category_id', 'name', 'sku', 'price', 'stock_quantity']),
         ]);
     }
 

@@ -15,6 +15,7 @@ export default function CategoryCreate({ categories: allCategories }: Props) {
         name: '',
         parent_id: '',
         is_active: true,
+        vat_rate: '20',
     });
 
     function handleSubmit(e: React.FormEvent) {
@@ -66,6 +67,28 @@ export default function CategoryCreate({ categories: allCategories }: Props) {
                                 </option>
                             ))}
                         </select>
+                    </div>
+
+                    <div>
+                        <label className="text-sm font-medium">
+                            KDV Oranı (%)
+                        </label>
+                        <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            step="0.01"
+                            value={data.vat_rate}
+                            onChange={(e) =>
+                                setData('vat_rate', e.target.value)
+                            }
+                            className="w-full rounded-md border p-2"
+                        />
+                        {errors.vat_rate && (
+                            <p className="text-sm text-destructive">
+                                {errors.vat_rate}
+                            </p>
+                        )}
                     </div>
 
                     <div className="flex items-center gap-2">

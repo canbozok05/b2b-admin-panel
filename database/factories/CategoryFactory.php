@@ -26,7 +26,7 @@ class CategoryFactory extends Factory
             'slug' => Str::slug($name),
             'is_active' => fake()->boolean(90),
             'parent_id' => null,
-
+            'vat_rate' => fake()->randomElement([1, 10, 20]),
         ];
     }
 }

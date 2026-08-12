@@ -12,6 +12,7 @@ type Product = {
     sku: string;
     price: string;
     stock_quantity: number;
+    category: { id: number; vat_rate: string } | null;
 };
 
 type OrderItem = {
@@ -64,17 +65,45 @@ export default function OrderEdit({ order, customers, products }: Props) {
         );
     }
 
-    function productPrice(productId: string): number {
-        const product = products.find((p) => String(p.id) === productId);
-
-        return product ? Number(product.price) : 0;
+    function findProduct(productId: string): Product | undefined {
+        return products.find((p) => String(p.id) === productId);
     }
 
-    const total = data.items.reduce(
-        (sum, item) =>
-            sum + productPrice(item.product_id) * (Number(item.quantity) || 0),
+    function lineGross(item: ItemRow): number {
+        const product = findProduct(item.product_id);
+
+        if (!product) {
+            return 0;
+        }
+
+        return Number(product.price) * (Number(item.quantity) || 0);
+    }
+
+    // Fiyat KDV dahil olduğu için, KDV oranı ve tutarını geriye doğru hesaplıyoruz:
+    // net = kdv dahil fiyat / (1 + oran/100), kdv tutarı = kdv dahil fiyat - net.
+    function lineVat(item: ItemRow): { rate: number; amount: number } {
+        const product = findProduct(item.product_id);
+
+        if (!product || !product.category) {
+            return { rate: 0, amount: 0 };
+        }
+
+        const rate = Number(product.category.vat_rate);
+        const gross = lineGross(item);
+        const net = gross / (1 + rate / 100);
+
+        return { rate, amount: gross - net };
+    }
+
+    const total = data.items.reduce((sum, item) => sum + lineGross(item), 0);
+    const totalVat = data.items.reduce(
+        (sum, item) => sum + lineVat(item).amount,
         0,
     );
+
+    function formatTl(value: number): string {
+        return value.toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+    }
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -118,61 +147,76 @@ export default function OrderEdit({ order, customers, products }: Props) {
                         <label className="text-sm font-medium">Ürünler</label>
 
                         {data.items.map((item, index) => {
-                            const selectedProduct = products.find(
-                                (p) => String(p.id) === item.product_id,
+                            const selectedProduct = findProduct(
+                                item.product_id,
                             );
+                            const vat = lineVat(item);
 
                             return (
                                 <div
                                     key={index}
-                                    className="flex items-start gap-2"
+                                    className="flex flex-col gap-1 rounded-md border p-2"
                                 >
-                                    <select
-                                        value={item.product_id}
-                                        onChange={(e) =>
-                                            updateItem(
-                                                index,
-                                                'product_id',
-                                                e.target.value,
-                                            )
-                                        }
-                                        className="flex-1 rounded-md border p-2"
-                                    >
-                                        <option value="">Ürün seçiniz</option>
-                                        {products.map((product) => (
-                                            <option
-                                                key={product.id}
-                                                value={product.id}
-                                            >
-                                                {product.name} ({product.sku}) —
-                                                stok: {product.stock_quantity}
+                                    <div className="flex items-start gap-2">
+                                        <select
+                                            value={item.product_id}
+                                            onChange={(e) =>
+                                                updateItem(
+                                                    index,
+                                                    'product_id',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="flex-1 rounded-md border p-2"
+                                        >
+                                            <option value="">
+                                                Ürün seçiniz
                                             </option>
-                                        ))}
-                                    </select>
+                                            {products.map((product) => (
+                                                <option
+                                                    key={product.id}
+                                                    value={product.id}
+                                                >
+                                                    {product.name} (
+                                                    {product.sku}) — stok:{' '}
+                                                    {product.stock_quantity}
+                                                </option>
+                                            ))}
+                                        </select>
 
-                                    <input
-                                        type="number"
-                                        min={1}
-                                        max={selectedProduct?.stock_quantity}
-                                        value={item.quantity}
-                                        onChange={(e) =>
-                                            updateItem(
-                                                index,
-                                                'quantity',
-                                                e.target.value,
-                                            )
-                                        }
-                                        className="w-24 rounded-md border p-2"
-                                    />
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            max={
+                                                selectedProduct?.stock_quantity
+                                            }
+                                            value={item.quantity}
+                                            onChange={(e) =>
+                                                updateItem(
+                                                    index,
+                                                    'quantity',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="w-24 rounded-md border p-2"
+                                        />
 
-                                    <button
-                                        type="button"
-                                        onClick={() => removeItem(index)}
-                                        disabled={data.items.length === 1}
-                                        className="rounded-md border px-3 py-2 text-sm text-destructive disabled:opacity-40"
-                                    >
-                                        Kaldır
-                                    </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeItem(index)}
+                                            disabled={data.items.length === 1}
+                                            className="rounded-md border px-3 py-2 text-sm text-destructive disabled:opacity-40"
+                                        >
+                                            Kaldır
+                                        </button>
+                                    </div>
+
+                                    {selectedProduct && (
+                                        <p className="text-xs text-muted-foreground">
+                                            KDV: %{vat.rate} (
+                                            {formatTl(vat.amount)} ₺)
+                                        </p>
+                                    )}
                                 </div>
                             );
                         })}
@@ -192,13 +236,14 @@ export default function OrderEdit({ order, customers, products }: Props) {
                         )}
                     </div>
 
-                    <p className="text-right text-lg font-semibold">
-                        Toplam:{' '}
-                        {total.toLocaleString('tr-TR', {
-                            minimumFractionDigits: 2,
-                        })}{' '}
-                        ₺
-                    </p>
+                    <div className="flex flex-col items-end gap-1 text-sm">
+                        <p className="text-muted-foreground">
+                            Toplam KDV: {formatTl(totalVat)} ₺
+                        </p>
+                        <p className="text-lg font-semibold">
+                            Toplam: {formatTl(total)} ₺
+                        </p>
+                    </div>
 
                     <button
                         type="submit"

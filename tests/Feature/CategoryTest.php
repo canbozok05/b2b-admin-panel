@@ -17,13 +17,28 @@ test('süper admin can create a category', function () {
     $response = $this->post(route('categories.store'), [
         'name' => 'Elektronik',
         'is_active' => true,
+        'vat_rate' => 20,
     ]);
 
     $response->assertRedirect(route('categories.index'));
     $this->assertDatabaseHas('categories', [
         'name' => 'Elektronik',
         'slug' => 'elektronik',
+        'vat_rate' => 20,
     ]);
+});
+
+test('a category vat rate over 100 is rejected', function () {
+    actingAsSuperAdmin();
+
+    $response = $this->post(route('categories.store'), [
+        'name' => 'Elektronik',
+        'is_active' => true,
+        'vat_rate' => 150,
+    ]);
+
+    $response->assertSessionHasErrors('vat_rate');
+    $this->assertDatabaseMissing('categories', ['name' => 'Elektronik']);
 });
 
 test('a category with products cannot be deleted', function () {

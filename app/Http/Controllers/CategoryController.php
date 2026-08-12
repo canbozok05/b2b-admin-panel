@@ -28,14 +28,16 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'parent_id' => 'nullable|exists:categories,id',
-            'is_active' => 'boolean', ]);
+            'is_active' => 'boolean',
+            'vat_rate' => 'required|numeric|min:0|max:100',
+        ]);
 
         Category::create([
             'name' => $validated['name'],
             'slug' => Str::slug($validated['name']),
             'parent_id' => $validated['parent_id'] ?? null,
             'is_active' => $validated['is_active'] ?? true,
-
+            'vat_rate' => $validated['vat_rate'],
         ]);
 
         return redirect()->route('categories.index');
@@ -57,6 +59,7 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255',
             'parent_id' => 'nullable|exists:categories,id',
             'is_active' => 'boolean',
+            'vat_rate' => 'required|numeric|min:0|max:100',
         ]);
 
         $category->update([
@@ -64,6 +67,7 @@ class CategoryController extends Controller
             'slug' => Str::slug($validated['name']),
             'parent_id' => $validated['parent_id'] ?? null,
             'is_active' => $validated['is_active'] ?? true,
+            'vat_rate' => $validated['vat_rate'],
         ]);
 
         return redirect()->route('categories.index');
