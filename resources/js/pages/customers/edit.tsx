@@ -1,13 +1,20 @@
 import { Head, useForm } from '@inertiajs/react';
+import CustomerAddressManager from '@/components/customer-address-manager';
 import customers from '@/routes/customers';
+
+type Address = {
+    id: number;
+    label: string;
+    address: string;
+};
 
 type Customer = {
     id: number;
     name: string;
     email: string;
     phone: string | null;
-    address: string | null;
     status: string;
+    addresses: Address[];
 };
 
 type Props = {
@@ -19,7 +26,6 @@ export default function CustomerEdit({ customer }: Props) {
         name: customer.name,
         email: customer.email,
         phone: customer.phone ?? '',
-        address: customer.address ?? '',
         status: customer.status,
     });
 
@@ -45,6 +51,7 @@ export default function CustomerEdit({ customer }: Props) {
                             type="text"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
+                            maxLength={255}
                             className="w-full rounded-md border p-2"
                         />
                         {errors.name && (
@@ -60,6 +67,7 @@ export default function CustomerEdit({ customer }: Props) {
                             type="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
+                            maxLength={255}
                             className="w-full rounded-md border p-2"
                         />
                         {errors.email && (
@@ -75,25 +83,12 @@ export default function CustomerEdit({ customer }: Props) {
                             type="text"
                             value={data.phone}
                             onChange={(e) => setData('phone', e.target.value)}
+                            maxLength={20}
                             className="w-full rounded-md border p-2"
                         />
                         {errors.phone && (
                             <p className="text-sm text-destructive">
                                 {errors.phone}
-                            </p>
-                        )}
-                    </div>
-
-                    <div>
-                        <label className="text-sm font-medium">Adres</label>
-                        <textarea
-                            value={data.address}
-                            onChange={(e) => setData('address', e.target.value)}
-                            className="w-full rounded-md border p-2"
-                        />
-                        {errors.address && (
-                            <p className="text-sm text-destructive">
-                                {errors.address}
                             </p>
                         )}
                     </div>
@@ -123,6 +118,13 @@ export default function CustomerEdit({ customer }: Props) {
                         Güncelle
                     </button>
                 </form>
+
+                <div className="max-w-md">
+                    <CustomerAddressManager
+                        customerId={customer.id}
+                        addresses={customer.addresses}
+                    />
+                </div>
             </div>
         </>
     );

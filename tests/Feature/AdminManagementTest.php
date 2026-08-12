@@ -48,3 +48,18 @@ test('süper admin can create a new admin with a role', function () {
     $newUser = User::where('email', 'yeni@example.com')->first();
     expect($newUser->hasRole('Depo Görevlisi'))->toBeTrue();
 });
+
+test('an admin password over 72 characters is rejected', function () {
+    actingAsSuperAdmin();
+    Role::findOrCreate('Depo Görevlisi');
+
+    $response = $this->post(route('admins.store'), [
+        'name' => 'Yeni Personel',
+        'email' => 'yeni@example.com',
+        'password' => str_repeat('a', 73),
+        'role' => 'Depo Görevlisi',
+    ]);
+
+    $response->assertSessionHasErrors('password');
+    $this->assertDatabaseMissing('users', ['email' => 'yeni@example.com']);
+});

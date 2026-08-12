@@ -40,6 +40,7 @@ export default function CategoryCreate({ categories: allCategories }: Props) {
                             type="text"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
+                            maxLength={255}
                             className="w-full rounded-md border p-2"
                         />
                         {errors.name && (

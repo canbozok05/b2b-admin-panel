@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -26,13 +27,26 @@ class CustomerController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:customers,email',
-            'phone' => 'nullable|string|max:255',
-            'address' => 'nullable|string',
+            'email' => 'required|email|max:255|unique:customers,email',
+            'phone' => 'nullable|string|max:20',
             'status' => 'required|in:active,inactive',
+            'address_label' => 'required|string|max:100',
+            'address_text' => 'required|string|max:500',
         ]);
 
-        Customer::create($validated);
+        DB::transaction(function () use ($validated) {
+            $customer = Customer::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone' => $validated['phone'] ?? null,
+                'status' => $validated['status'],
+            ]);
+
+            $customer->addresses()->create([
+                'label' => $validated['address_label'],
+                'address' => $validated['address_text'],
+            ]);
+        });
 
         return redirect()->route('customers.index');
     }
@@ -40,7 +54,7 @@ class CustomerController extends Controller
     public function edit(int $id): Response
     {
         return Inertia::render('customers/edit', [
-            'customer' => Customer::findOrFail($id),
+            'customer' => Customer::with('addresses')->findOrFail($id),
         ]);
     }
 
@@ -50,9 +64,8 @@ class CustomerController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:customers,email,'.$id,
-            'phone' => 'nullable|string|max:255',
-            'address' => 'nullable|string',
+            'email' => 'required|email|max:255|unique:customers,email,'.$id,
+            'phone' => 'nullable|string|max:20',
             'status' => 'required|in:active,inactive',
         ]);
 

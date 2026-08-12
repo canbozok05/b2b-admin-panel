@@ -21,7 +21,6 @@ class CustomerFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->phoneNumber(),
-            'address' => fake()->address(),
             'status' => fake()->randomElement(['active', 'inactive']),
         ];
     }

@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,7 +30,7 @@ class OrderController extends Controller
 
     public function show(int $id): Response
     {
-        $order = Order::with('customer', 'orderItems.product.category')->findOrFail($id);
+        $order = Order::with('customer', 'customerAddress', 'orderItems.product.category')->findOrFail($id);
 
         return Inertia::render('orders/show', [
             'order' => $order,
@@ -39,7 +40,7 @@ class OrderController extends Controller
     public function create(): Response
     {
         return Inertia::render('orders/create', [
-            'customers' => Customer::all(),
+            'customers' => Customer::with('addresses')->get(),
             'products' => Product::with('category:id,vat_rate')
                 ->get(['id', 'category_id', 'name', 'sku', 'price', 'stock_quantity']),
         ]);
@@ -49,9 +50,15 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
+            'customer_address_id' => [
+                'nullable',
+                Rule::exists('customer_addresses', 'id')->where(
+                    fn ($query) => $query->where('customer_id', $request->customer_id)
+                ),
+            ],
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.quantity' => 'required|integer|min:1|max:1000000',
         ]);
 
         foreach ($validated['items'] as $item) {
@@ -77,6 +84,7 @@ class OrderController extends Controller
 
             $order = Order::create([
                 'customer_id' => $validated['customer_id'],
+                'customer_address_id' => $validated['customer_address_id'] ?? null,
                 'order_number' => $orderNumber,
                 'total_amount' => $totalAmount,
                 'status' => 'pending',
@@ -104,7 +112,7 @@ class OrderController extends Controller
 
         return Inertia::render('orders/edit', [
             'order' => $order,
-            'customers' => Customer::all(),
+            'customers' => Customer::with('addresses')->get(),
             'products' => Product::with('category:id,vat_rate')
                 ->get(['id', 'category_id', 'name', 'sku', 'price', 'stock_quantity']),
         ]);
@@ -116,9 +124,15 @@ class OrderController extends Controller
 
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
+            'customer_address_id' => [
+                'nullable',
+                Rule::exists('customer_addresses', 'id')->where(
+                    fn ($query) => $query->where('customer_id', $request->customer_id)
+                ),
+            ],
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.quantity' => 'required|integer|min:1|max:1000000',
         ]);
 
         DB::transaction(function () use ($order, $validated) {
@@ -135,6 +149,7 @@ class OrderController extends Controller
 
             $order->update([
                 'customer_id' => $validated['customer_id'],
+                'customer_address_id' => $validated['customer_address_id'] ?? null,
                 'total_amount' => $totalAmount,
             ]);
 

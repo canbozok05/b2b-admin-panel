@@ -54,6 +54,7 @@ export default function ProductCreate({ categories }: Props) {
                             type="text"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
+                            maxLength={255}
                             className="w-full rounded-md border p-2"
                         />
                         {errors.name && (
@@ -69,6 +70,7 @@ export default function ProductCreate({ categories }: Props) {
                             type="text"
                             value={data.sku}
                             onChange={(e) => setData('sku', e.target.value)}
+                            maxLength={100}
                             className="w-full rounded-md border p-2"
                         />
                         {errors.sku && (
@@ -114,6 +116,8 @@ export default function ProductCreate({ categories }: Props) {
                         <input
                             type="number"
                             step="0.01"
+                            min={0}
+                            max={99999999.99}
                             value={data.price}
                             onChange={(e) => setData('price', e.target.value)}
                             className="w-full rounded-md border p-2"
@@ -131,6 +135,8 @@ export default function ProductCreate({ categories }: Props) {
                         </label>
                         <input
                             type="number"
+                            min={0}
+                            max={1000000}
                             value={data.stock_quantity}
                             onChange={(e) =>
                                 setData('stock_quantity', e.target.value)

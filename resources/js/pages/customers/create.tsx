@@ -6,8 +6,9 @@ export default function CustomerCreate() {
         name: '',
         email: '',
         phone: '',
-        address: '',
         status: 'active',
+        address_label: '',
+        address_text: '',
     });
 
     function handleSubmit(e: React.FormEvent) {
@@ -32,6 +33,7 @@ export default function CustomerCreate() {
                             type="text"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
+                            maxLength={255}
                             className="w-full rounded-md border p-2"
                         />
                         {errors.name && (
@@ -47,6 +49,7 @@ export default function CustomerCreate() {
                             type="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
+                            maxLength={255}
                             className="w-full rounded-md border p-2"
                         />
                         {errors.email && (
@@ -62,6 +65,7 @@ export default function CustomerCreate() {
                             type="text"
                             value={data.phone}
                             onChange={(e) => setData('phone', e.target.value)}
+                            maxLength={20}
                             className="w-full rounded-md border p-2"
                         />
                         {errors.phone && (
@@ -71,18 +75,48 @@ export default function CustomerCreate() {
                         )}
                     </div>
 
-                    <div>
-                        <label className="text-sm font-medium">Adres</label>
-                        <textarea
-                            value={data.address}
-                            onChange={(e) => setData('address', e.target.value)}
-                            className="w-full rounded-md border p-2"
-                        />
-                        {errors.address && (
-                            <p className="text-sm text-destructive">
-                                {errors.address}
-                            </p>
-                        )}
+                    <div className="flex flex-col gap-2 rounded-md border p-3">
+                        <p className="text-sm font-medium">
+                            İlk Adres (zorunlu)
+                        </p>
+
+                        <div>
+                            <label className="text-sm font-medium">
+                                Adres Etiketi
+                            </label>
+                            <input
+                                type="text"
+                                value={data.address_label}
+                                onChange={(e) =>
+                                    setData('address_label', e.target.value)
+                                }
+                                placeholder="örn. Ev, İş, Okul"
+                                maxLength={100}
+                                className="w-full rounded-md border p-2"
+                            />
+                            {errors.address_label && (
+                                <p className="text-sm text-destructive">
+                                    {errors.address_label}
+                                </p>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className="text-sm font-medium">Adres</label>
+                            <textarea
+                                value={data.address_text}
+                                onChange={(e) =>
+                                    setData('address_text', e.target.value)
+                                }
+                                maxLength={500}
+                                className="w-full rounded-md border p-2"
+                            />
+                            {errors.address_text && (
+                                <p className="text-sm text-destructive">
+                                    {errors.address_text}
+                                </p>
+                            )}
+                        </div>
                     </div>
 
                     <div>

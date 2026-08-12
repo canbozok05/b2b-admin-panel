@@ -1,9 +1,16 @@
 import { Head, useForm } from '@inertiajs/react';
 import orders from '@/routes/orders';
 
+type Address = {
+    id: number;
+    label: string;
+    address: string;
+};
+
 type Customer = {
     id: number;
     name: string;
+    addresses: Address[];
 };
 
 type Product = {
@@ -24,6 +31,7 @@ type OrderItem = {
 type Order = {
     id: number;
     customer_id: number;
+    customer_address_id: number | null;
     order_items: OrderItem[];
 };
 
@@ -41,11 +49,23 @@ type ItemRow = {
 export default function OrderEdit({ order, customers, products }: Props) {
     const { data, setData, put, processing, errors } = useForm({
         customer_id: String(order.customer_id),
+        customer_address_id: order.customer_address_id
+            ? String(order.customer_address_id)
+            : '',
         items: order.order_items.map((item): ItemRow => ({
             product_id: String(item.product_id),
             quantity: String(item.quantity),
         })),
     });
+
+    const selectedCustomer = customers.find(
+        (c) => String(c.id) === data.customer_id,
+    );
+
+    function handleCustomerChange(customerId: string) {
+        setData('customer_id', customerId);
+        setData('customer_address_id', '');
+    }
 
     function updateItem(index: number, field: keyof ItemRow, value: string) {
         const next = data.items.map((item, i) =>
@@ -126,7 +146,7 @@ export default function OrderEdit({ order, customers, products }: Props) {
                         <select
                             value={data.customer_id}
                             onChange={(e) =>
-                                setData('customer_id', e.target.value)
+                                handleCustomerChange(e.target.value)
                             }
                             className="w-full rounded-md border p-2"
                         >
@@ -142,6 +162,42 @@ export default function OrderEdit({ order, customers, products }: Props) {
                             </p>
                         )}
                     </div>
+
+                    {selectedCustomer && (
+                        <div>
+                            <label className="text-sm font-medium">
+                                Teslimat Adresi
+                            </label>
+                            {selectedCustomer.addresses.length > 0 ? (
+                                <select
+                                    value={data.customer_address_id}
+                                    onChange={(e) =>
+                                        setData(
+                                            'customer_address_id',
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="w-full rounded-md border p-2"
+                                >
+                                    <option value="">Seçilmedi</option>
+                                    {selectedCustomer.addresses.map((addr) => (
+                                        <option key={addr.id} value={addr.id}>
+                                            {addr.label} — {addr.address}
+                                        </option>
+                                    ))}
+                                </select>
+                            ) : (
+                                <p className="text-sm text-muted-foreground">
+                                    Bu müşterinin kayıtlı adresi yok.
+                                </p>
+                            )}
+                            {errors.customer_address_id && (
+                                <p className="text-sm text-destructive">
+                                    {errors.customer_address_id}
+                                </p>
+                            )}
+                        </div>
+                    )}
 
                     <div className="flex flex-col gap-2">
                         <label className="text-sm font-medium">Ürünler</label>

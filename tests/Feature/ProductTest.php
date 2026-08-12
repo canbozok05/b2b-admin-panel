@@ -81,3 +81,51 @@ test('süper admin can create a product', function () {
     $response->assertRedirect(route('products.index'));
     $this->assertDatabaseHas('products', ['sku' => 'TST-001']);
 });
+
+test('a product sku over 100 characters is rejected', function () {
+    actingAsSuperAdmin();
+
+    $category = Category::factory()->create();
+
+    $response = $this->post(route('products.store'), [
+        'category_id' => $category->id,
+        'name' => 'Test Ürünü',
+        'sku' => str_repeat('a', 101),
+        'price' => 149.90,
+        'stock_quantity' => 10,
+    ]);
+
+    $response->assertSessionHasErrors('sku');
+});
+
+test('a product stock quantity over 1,000,000 is rejected', function () {
+    actingAsSuperAdmin();
+
+    $category = Category::factory()->create();
+
+    $response = $this->post(route('products.store'), [
+        'category_id' => $category->id,
+        'name' => 'Test Ürünü',
+        'sku' => 'TST-002',
+        'price' => 149.90,
+        'stock_quantity' => 1_000_001,
+    ]);
+
+    $response->assertSessionHasErrors('stock_quantity');
+});
+
+test('a product price over the column precision is rejected', function () {
+    actingAsSuperAdmin();
+
+    $category = Category::factory()->create();
+
+    $response = $this->post(route('products.store'), [
+        'category_id' => $category->id,
+        'name' => 'Test Ürünü',
+        'sku' => 'TST-003',
+        'price' => 100000000,
+        'stock_quantity' => 10,
+    ]);
+
+    $response->assertSessionHasErrors('price');
+});

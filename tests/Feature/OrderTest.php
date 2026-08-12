@@ -2,6 +2,7 @@
 
 use App\Mail\OrderStatusUpdated;
 use App\Models\Customer;
+use App\Models\CustomerAddress;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Support\Facades\Mail;
@@ -179,4 +180,72 @@ test('depo görevlisi cannot create an order', function () {
     $response = $this->get(route('orders.create'));
 
     $response->assertForbidden();
+});
+
+test('an order can be created with a delivery address', function () {
+    actingAsSuperAdmin();
+
+    $customer = Customer::factory()->create();
+    $address = CustomerAddress::create([
+        'customer_id' => $customer->id,
+        'label' => 'Ev',
+        'address' => 'Test mahallesi, test sokak no: 1',
+    ]);
+    $product = Product::factory()->create(['stock_quantity' => 10, 'price' => 50]);
+
+    $response = $this->post(route('orders.store'), [
+        'customer_id' => $customer->id,
+        'customer_address_id' => $address->id,
+        'items' => [
+            ['product_id' => $product->id, 'quantity' => 1],
+        ],
+    ]);
+
+    $response->assertRedirect(route('orders.index'));
+
+    $order = Order::latest()->first();
+    expect($order->customer_address_id)->toBe($address->id);
+});
+
+test('an order cannot use another customer\'s delivery address', function () {
+    actingAsSuperAdmin();
+
+    $customer = Customer::factory()->create();
+    $otherCustomer = Customer::factory()->create();
+    $otherAddress = CustomerAddress::create([
+        'customer_id' => $otherCustomer->id,
+        'label' => 'Ev',
+        'address' => 'Başka bir müşterinin adresi',
+    ]);
+    $product = Product::factory()->create(['stock_quantity' => 10, 'price' => 50]);
+
+    $response = $this->post(route('orders.store'), [
+        'customer_id' => $customer->id,
+        'customer_address_id' => $otherAddress->id,
+        'items' => [
+            ['product_id' => $product->id, 'quantity' => 1],
+        ],
+    ]);
+
+    $response->assertSessionHasErrors('customer_address_id');
+    $this->assertDatabaseCount('orders', 0);
+});
+
+test('an order can be created without selecting a delivery address', function () {
+    actingAsSuperAdmin();
+
+    $customer = Customer::factory()->create();
+    $product = Product::factory()->create(['stock_quantity' => 10, 'price' => 50]);
+
+    $response = $this->post(route('orders.store'), [
+        'customer_id' => $customer->id,
+        'items' => [
+            ['product_id' => $product->id, 'quantity' => 1],
+        ],
+    ]);
+
+    $response->assertRedirect(route('orders.index'));
+
+    $order = Order::latest()->first();
+    expect($order->customer_address_id)->toBeNull();
 });

@@ -6,7 +6,6 @@ type Customer = {
     name: string;
     email: string;
     phone: string | null;
-    address: string | null;
     status: string;
 };
 

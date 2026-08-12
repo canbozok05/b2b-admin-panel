@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CustomerAddressController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
@@ -50,6 +51,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('musteriler/{id}/edit', [CustomerController::class, 'edit'])->name('customers.edit');
         Route::put('musteriler/{id}', [CustomerController::class, 'update'])->name('customers.update');
         Route::delete('musteriler/{id}', [CustomerController::class, 'destroy'])->name('customers.destroy');
+
+        Route::post('musteriler/{customerId}/adresler', [CustomerAddressController::class, 'store'])->name('customer-addresses.store');
+        Route::put('musteriler/{customerId}/adresler/{id}', [CustomerAddressController::class, 'update'])->name('customer-addresses.update');
+        Route::delete('musteriler/{customerId}/adresler/{id}', [CustomerAddressController::class, 'destroy'])->name('customer-addresses.destroy');
 
         Route::get('orders/create', [OrderController::class, 'create'])->name('orders.create');
         Route::post('orders', [OrderController::class, 'store'])->name('orders.store');

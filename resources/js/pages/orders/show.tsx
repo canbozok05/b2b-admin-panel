@@ -23,7 +23,11 @@ type Order = {
         name: string;
         email: string;
         phone: string | null;
-        address: string | null;
+    } | null;
+    customer_address: {
+        id: number;
+        label: string;
+        address: string;
     } | null;
     order_items: OrderItem[];
 };
@@ -92,13 +96,26 @@ export default function OrderShow({ order }: Props) {
                                 <p className="text-muted-foreground">
                                     {order.customer.phone ?? '—'}
                                 </p>
-                                <p className="text-muted-foreground">
-                                    {order.customer.address ?? '—'}
-                                </p>
                             </div>
                         ) : (
                             <p className="text-sm text-muted-foreground">
                                 Müşteri bulunamadı
+                            </p>
+                        )}
+
+                        <h3 className="mt-4 mb-1 text-sm font-semibold">
+                            Teslimat Adresi
+                        </h3>
+                        {order.customer_address ? (
+                            <p className="text-sm text-muted-foreground">
+                                <span className="font-medium text-foreground">
+                                    {order.customer_address.label}
+                                </span>{' '}
+                                — {order.customer_address.address}
+                            </p>
+                        ) : (
+                            <p className="text-sm text-muted-foreground">
+                                Belirtilmedi
                             </p>
                         )}
                     </div>

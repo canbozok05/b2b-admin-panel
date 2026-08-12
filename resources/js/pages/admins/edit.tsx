@@ -48,6 +48,7 @@ export default function AdminEdit({ admin, roles }: Props) {
                             type="text"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
+                            maxLength={255}
                             className="w-full rounded-md border p-2"
                         />
                         {errors.name && (
@@ -63,6 +64,7 @@ export default function AdminEdit({ admin, roles }: Props) {
                             type="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
+                            maxLength={255}
                             className="w-full rounded-md border p-2"
                         />
                         {errors.email && (
@@ -82,6 +84,7 @@ export default function AdminEdit({ admin, roles }: Props) {
                             onChange={(e) =>
                                 setData('password', e.target.value)
                             }
+                            maxLength={72}
                             className="w-full rounded-md border p-2"
                         />
                         {errors.password && (
