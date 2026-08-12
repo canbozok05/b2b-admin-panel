@@ -20,6 +20,12 @@ class RoleSeeder extends Seeder
         $testUser = User::where('email', 'test@example.com')->first();
         $testUser->assignRole('Süper Admin');
 
+        $adminUser = User::firstOrCreate(
+            ['email' => 'admin@test.com'],
+            ['name' => 'Admin', 'password' => Hash::make('password')]
+        );
+        $adminUser->assignRole('Süper Admin');
+
         $depoUser = User::firstOrCreate(
             ['email' => 'depo@example.com'],
             ['name' => 'Depo Görevlisi', 'password' => Hash::make('password')]
