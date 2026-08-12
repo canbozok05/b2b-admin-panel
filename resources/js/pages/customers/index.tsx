@@ -1,4 +1,5 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 import customers from '@/routes/customers';
 
 type Customer = {
@@ -9,11 +10,35 @@ type Customer = {
     status: string;
 };
 
-type Props = {
-    customers: Customer[];
+type Filters = {
+    search: string;
+    status: string;
 };
 
-export default function CustomerIndex({ customers: allCustomers }: Props) {
+type Props = {
+    customers: Customer[];
+    filters: Filters;
+};
+
+export default function CustomerIndex({
+    customers: allCustomers,
+    filters,
+}: Props) {
+    const [search, setSearch] = useState(filters.search);
+    const [status, setStatus] = useState(filters.status);
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            router.get(
+                customers.index.url(),
+                { search: search || undefined, status: status || undefined },
+                { preserveState: true, replace: true },
+            );
+        }, 300);
+
+        return () => clearTimeout(timeout);
+    }, [search, status]);
+
     return (
         <>
             <Head title="Müşteriler" />
@@ -29,6 +54,25 @@ export default function CustomerIndex({ customers: allCustomers }: Props) {
                     </Link>
                 </div>
 
+                <div className="flex gap-3">
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="İsim, email veya telefon ara..."
+                        className="w-full max-w-sm rounded-md border p-2 text-sm"
+                    />
+                    <select
+                        value={status}
+                        onChange={(e) => setStatus(e.target.value)}
+                        className="rounded-md border p-2 text-sm"
+                    >
+                        <option value="">Tüm Durumlar</option>
+                        <option value="active">Aktif</option>
+                        <option value="inactive">Pasif</option>
+                    </select>
+                </div>
+
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b text-left">
@@ -40,6 +84,16 @@ export default function CustomerIndex({ customers: allCustomers }: Props) {
                         </tr>
                     </thead>
                     <tbody>
+                        {allCustomers.length === 0 && (
+                            <tr>
+                                <td
+                                    colSpan={5}
+                                    className="p-4 text-center text-muted-foreground"
+                                >
+                                    Filtreyle eşleşen müşteri bulunamadı.
+                                </td>
+                            </tr>
+                        )}
                         {allCustomers.map((customer) => (
                             <tr key={customer.id} className="border-b">
                                 <td className="p-2">{customer.name}</td>

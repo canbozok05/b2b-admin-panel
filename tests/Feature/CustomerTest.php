@@ -83,3 +83,53 @@ test('a customer phone over 20 characters is rejected', function () {
     $response->assertSessionHasErrors('phone');
     $this->assertDatabaseMissing('customers', ['email' => 'ahmet@example.com']);
 });
+
+test('customers can be searched by name with Turkish-insensitive casing', function () {
+    actingAsSuperAdmin();
+
+    Customer::factory()->create(['name' => 'Şahnur Okur']);
+    Customer::factory()->create(['name' => 'Cem Keseroğlu']);
+
+    $response = $this->get(route('customers.index', ['search' => 'ŞAHNUR']));
+
+    $response->assertInertia(fn ($page) => $page
+        ->has('customers', 1)
+        ->where('customers.0.name', 'Şahnur Okur')
+    );
+});
+
+test('customers can be searched by email', function () {
+    actingAsSuperAdmin();
+
+    Customer::factory()->create(['email' => 'unique-search@example.com']);
+    Customer::factory()->create(['email' => 'other@example.com']);
+
+    $response = $this->get(route('customers.index', ['search' => 'unique-search']));
+
+    $response->assertInertia(fn ($page) => $page->has('customers', 1));
+});
+
+test('customers can be searched by phone', function () {
+    actingAsSuperAdmin();
+
+    Customer::factory()->create(['phone' => '05551234567']);
+    Customer::factory()->create(['phone' => '05559876543']);
+
+    $response = $this->get(route('customers.index', ['search' => '1234567']));
+
+    $response->assertInertia(fn ($page) => $page->has('customers', 1));
+});
+
+test('customers can be filtered by status', function () {
+    actingAsSuperAdmin();
+
+    Customer::factory()->create(['status' => 'active']);
+    Customer::factory()->create(['status' => 'inactive']);
+
+    $response = $this->get(route('customers.index', ['status' => 'inactive']));
+
+    $response->assertInertia(fn ($page) => $page
+        ->has('customers', 1)
+        ->where('customers.0.status', 'inactive')
+    );
+});
