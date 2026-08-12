@@ -1,7 +1,9 @@
 <?php
 
+use App\Models\Category;
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -63,4 +65,30 @@ test('monthly sales only counts confirmed, shipped and completed orders', functi
     $response = $this->get(route('dashboard'));
 
     $response->assertInertia(fn (Assert $page) => $page->where('monthlySales', 900));
+});
+
+test('critical stock uses each product\'s own category threshold', function () {
+    actingAsSuperAdmin();
+
+    $phoneCategory = Category::factory()->create(['critical_stock_threshold' => 15]);
+    $sofaCategory = Category::factory()->create(['critical_stock_threshold' => 5]);
+
+    // Telefon: 10 adet stok, eşik 15 -> kritik.
+    Product::factory()->create([
+        'category_id' => $phoneCategory->id,
+        'stock_quantity' => 10,
+    ]);
+
+    // Koltuk takımı: 10 adet stok, eşik 5 -> kritik değil.
+    Product::factory()->create([
+        'category_id' => $sofaCategory->id,
+        'stock_quantity' => 10,
+    ]);
+
+    $response = $this->get(route('dashboard'));
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('criticalStock', 1)
+        ->has('lowStockProducts', 1)
+    );
 });

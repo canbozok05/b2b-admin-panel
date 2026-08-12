@@ -16,6 +16,7 @@ export default function CategoryCreate({ categories: allCategories }: Props) {
         parent_id: '',
         is_active: true,
         vat_rate: '20',
+        critical_stock_threshold: '10',
     });
 
     function handleSubmit(e: React.FormEvent) {
@@ -88,6 +89,35 @@ export default function CategoryCreate({ categories: allCategories }: Props) {
                         {errors.vat_rate && (
                             <p className="text-sm text-destructive">
                                 {errors.vat_rate}
+                            </p>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="text-sm font-medium">
+                            Kritik Stok Eşiği
+                        </label>
+                        <input
+                            type="number"
+                            min={0}
+                            max={100000}
+                            step="1"
+                            value={data.critical_stock_threshold}
+                            onChange={(e) =>
+                                setData(
+                                    'critical_stock_threshold',
+                                    e.target.value,
+                                )
+                            }
+                            className="w-full rounded-md border p-2"
+                        />
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Bu kategorideki bir ürünün stoğu bu sayının altına
+                            düşünce panelde kritik olarak işaretlenir.
+                        </p>
+                        {errors.critical_stock_threshold && (
+                            <p className="text-sm text-destructive">
+                                {errors.critical_stock_threshold}
                             </p>
                         )}
                     </div>

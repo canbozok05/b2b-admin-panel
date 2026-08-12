@@ -7,6 +7,7 @@ type Category = {
     parent_id: number | null;
     is_active: boolean;
     vat_rate: string;
+    critical_stock_threshold: number;
 };
 
 type Props = {
@@ -20,6 +21,7 @@ export default function CategoryEdit({ category, categories }: Props) {
         parent_id: category.parent_id ? String(category.parent_id) : '',
         is_active: category.is_active,
         vat_rate: category.vat_rate,
+        critical_stock_threshold: String(category.critical_stock_threshold),
     });
 
     function handleSubmit(e: React.FormEvent) {
@@ -94,6 +96,35 @@ export default function CategoryEdit({ category, categories }: Props) {
                         {errors.vat_rate && (
                             <p className="text-sm text-destructive">
                                 {errors.vat_rate}
+                            </p>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="text-sm font-medium">
+                            Kritik Stok Eşiği
+                        </label>
+                        <input
+                            type="number"
+                            min={0}
+                            max={100000}
+                            step="1"
+                            value={data.critical_stock_threshold}
+                            onChange={(e) =>
+                                setData(
+                                    'critical_stock_threshold',
+                                    e.target.value,
+                                )
+                            }
+                            className="w-full rounded-md border p-2"
+                        />
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Bu kategorideki bir ürünün stoğu bu sayının altına
+                            düşünce panelde kritik olarak işaretlenir.
+                        </p>
+                        {errors.critical_stock_threshold && (
+                            <p className="text-sm text-destructive">
+                                {errors.critical_stock_threshold}
                             </p>
                         )}
                     </div>

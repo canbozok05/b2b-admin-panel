@@ -21,29 +21,35 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Üç seviyeli, gerçekçi bir kategori ağacı: üst kategori -> alt kategori -> ürünlerin bağlı olduğu yaprak kategori.
+     * Üç seviyeli, gerçekçi bir kategori ağacı: üst kategori -> alt kategori -> ürünlerin bağlı
+     * olduğu yaprak kategori. Her yaprağın kendi KDV oranı ve kritik stok eşiği var; örneğin
+     * hacimli/pahalı bir ürün (koltuk takımı) az stokla kritik sayılırken, yüksek ciroyla satılan
+     * bir ürün (akıllı telefon) için eşik daha yüksek tutuluyor.
      *
-     * @var array<string, array{vat_rate: int, children: array<string, list<string>>}>
+     * @var array<string, array<string, array<string, array{vat_rate: int, critical_stock_threshold: int}>>>
      */
     private array $categoryTree = [
         'Teknoloji' => [
-            'vat_rate' => 20,
-            'children' => [
-                'Bilgisayar & Telefon' => ['Dizüstü Bilgisayar', 'Akıllı Telefon'],
-                'Beyaz Eşya' => ['Buzdolabı', 'Çamaşır Makinesi'],
+            'Bilgisayar & Telefon' => [
+                'Dizüstü Bilgisayar' => ['vat_rate' => 20, 'critical_stock_threshold' => 8],
+                'Akıllı Telefon' => ['vat_rate' => 20, 'critical_stock_threshold' => 15],
+            ],
+            'Beyaz Eşya' => [
+                'Buzdolabı' => ['vat_rate' => 20, 'critical_stock_threshold' => 5],
+                'Çamaşır Makinesi' => ['vat_rate' => 20, 'critical_stock_threshold' => 5],
             ],
         ],
         'Mobilya' => [
-            'vat_rate' => 20,
-            'children' => [
-                'Oturma Odası' => ['Koltuk Takımı'],
-                'Yatak Odası' => ['Yatak'],
+            'Oturma Odası' => [
+                'Koltuk Takımı' => ['vat_rate' => 10, 'critical_stock_threshold' => 5],
+            ],
+            'Yatak Odası' => [
+                'Yatak' => ['vat_rate' => 10, 'critical_stock_threshold' => 5],
             ],
         ],
         'Ev Tekstili' => [
-            'vat_rate' => 10,
-            'children' => [
-                'Yatak Takımları' => ['Nevresim Takımı'],
+            'Yatak Takımları' => [
+                'Nevresim Takımı' => ['vat_rate' => 1, 'critical_stock_threshold' => 25],
             ],
         ],
     ];
@@ -129,31 +135,30 @@ class DatabaseSeeder extends Seeder
     {
         $leafCategories = [];
 
-        foreach ($this->categoryTree as $topName => $topData) {
+        foreach ($this->categoryTree as $topName => $midCategories) {
             $top = Category::create([
                 'name' => $topName,
                 'slug' => Str::slug($topName),
                 'is_active' => true,
                 'parent_id' => null,
-                'vat_rate' => $topData['vat_rate'],
             ]);
 
-            foreach ($topData['children'] as $midName => $leafNames) {
+            foreach ($midCategories as $midName => $leaves) {
                 $mid = Category::create([
                     'name' => $midName,
                     'slug' => Str::slug($midName),
                     'is_active' => true,
                     'parent_id' => $top->id,
-                    'vat_rate' => $topData['vat_rate'],
                 ]);
 
-                foreach ($leafNames as $leafName) {
+                foreach ($leaves as $leafName => $leafData) {
                     $leafCategories[$leafName] = Category::create([
                         'name' => $leafName,
                         'slug' => Str::slug($leafName),
                         'is_active' => true,
                         'parent_id' => $mid->id,
-                        'vat_rate' => $topData['vat_rate'],
+                        'vat_rate' => $leafData['vat_rate'],
+                        'critical_stock_threshold' => $leafData['critical_stock_threshold'],
                     ]);
                 }
             }

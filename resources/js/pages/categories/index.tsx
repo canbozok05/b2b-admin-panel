@@ -7,6 +7,7 @@ type Category = {
     slug: string;
     is_active: boolean;
     vat_rate: string;
+    critical_stock_threshold: number;
     parent: { id: number; name: string } | null;
 };
 
@@ -36,6 +37,7 @@ export default function CategoryIndex({ categories }: Props) {
                             <th className="p-2">İsim</th>
                             <th className="p-2">Üst Kategori</th>
                             <th className="p-2">KDV</th>
+                            <th className="p-2">Kritik Stok Eşiği</th>
                             <th className="p-2">Durum</th>
                             <th className="p-2">İşlemler</th>
                         </tr>
@@ -50,6 +52,9 @@ export default function CategoryIndex({ categories }: Props) {
                                         : '—'}
                                 </td>
                                 <td className="p-2">%{category.vat_rate}</td>
+                                <td className="p-2">
+                                    {category.critical_stock_threshold} adet
+                                </td>
                                 <td className="p-2">
                                     {category.is_active ? 'Aktif' : 'Pasif'}
                                 </td>

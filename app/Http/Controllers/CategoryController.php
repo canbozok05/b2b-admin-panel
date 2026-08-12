@@ -30,6 +30,7 @@ class CategoryController extends Controller
             'parent_id' => 'nullable|exists:categories,id',
             'is_active' => 'boolean',
             'vat_rate' => 'required|numeric|min:0|max:100',
+            'critical_stock_threshold' => 'required|integer|min:0|max:100000',
         ]);
 
         Category::create([
@@ -38,6 +39,7 @@ class CategoryController extends Controller
             'parent_id' => $validated['parent_id'] ?? null,
             'is_active' => $validated['is_active'] ?? true,
             'vat_rate' => $validated['vat_rate'],
+            'critical_stock_threshold' => $validated['critical_stock_threshold'],
         ]);
 
         return redirect()->route('categories.index');
@@ -60,6 +62,7 @@ class CategoryController extends Controller
             'parent_id' => 'nullable|exists:categories,id',
             'is_active' => 'boolean',
             'vat_rate' => 'required|numeric|min:0|max:100',
+            'critical_stock_threshold' => 'required|integer|min:0|max:100000',
         ]);
 
         $category->update([
@@ -68,6 +71,7 @@ class CategoryController extends Controller
             'parent_id' => $validated['parent_id'] ?? null,
             'is_active' => $validated['is_active'] ?? true,
             'vat_rate' => $validated['vat_rate'],
+            'critical_stock_threshold' => $validated['critical_stock_threshold'],
         ]);
 
         return redirect()->route('categories.index');

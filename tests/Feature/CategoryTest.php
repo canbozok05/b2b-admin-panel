@@ -18,6 +18,7 @@ test('süper admin can create a category', function () {
         'name' => 'Elektronik',
         'is_active' => true,
         'vat_rate' => 20,
+        'critical_stock_threshold' => 10,
     ]);
 
     $response->assertRedirect(route('categories.index'));
@@ -25,6 +26,7 @@ test('süper admin can create a category', function () {
         'name' => 'Elektronik',
         'slug' => 'elektronik',
         'vat_rate' => 20,
+        'critical_stock_threshold' => 10,
     ]);
 });
 
@@ -35,9 +37,24 @@ test('a category vat rate over 100 is rejected', function () {
         'name' => 'Elektronik',
         'is_active' => true,
         'vat_rate' => 150,
+        'critical_stock_threshold' => 10,
     ]);
 
     $response->assertSessionHasErrors('vat_rate');
+    $this->assertDatabaseMissing('categories', ['name' => 'Elektronik']);
+});
+
+test('a negative category critical stock threshold is rejected', function () {
+    actingAsSuperAdmin();
+
+    $response = $this->post(route('categories.store'), [
+        'name' => 'Elektronik',
+        'is_active' => true,
+        'vat_rate' => 20,
+        'critical_stock_threshold' => -1,
+    ]);
+
+    $response->assertSessionHasErrors('critical_stock_threshold');
     $this->assertDatabaseMissing('categories', ['name' => 'Elektronik']);
 });
 

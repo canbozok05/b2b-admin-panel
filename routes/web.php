@@ -18,6 +18,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::middleware('role:Süper Admin')->group(function () {
         Route::get('dashboard', function () {
+            $criticalStockQuery = Product::query()
+                ->join('categories', 'products.category_id', '=', 'categories.id')
+                ->whereColumn('products.stock_quantity', '<', 'categories.critical_stock_threshold');
+
             return Inertia::render('dashboard', [
                 'totalCustomers' => Customer::count(),
                 'monthlySales' => Order::whereMonth('created_at', now()->month)
@@ -25,8 +29,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     ->whereNotIn('status', ['pending', 'cancelled'])
                     ->sum('total_amount'),
                 'pendingOrders' => Order::where('status', 'pending')->count(),
-                'criticalStock' => Product::where('stock_quantity', '<', 10)->count(),
-                'lowStockProducts' => Product::where('stock_quantity', '<', 10)->get(['name', 'stock_quantity']),
+                'criticalStock' => (clone $criticalStockQuery)->count(),
+                'lowStockProducts' => (clone $criticalStockQuery)->get([
+                    'products.name',
+                    'products.stock_quantity',
+                    'categories.critical_stock_threshold',
+                ]),
             ]);
         })->name('dashboard');
 

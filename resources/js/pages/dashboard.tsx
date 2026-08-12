@@ -7,7 +7,11 @@ type DashboardProps = {
     monthlySales: number;
     pendingOrders: number;
     criticalStock: number;
-    lowStockProducts: { name: string; stock_quantity: number }[];
+    lowStockProducts: {
+        name: string;
+        stock_quantity: number;
+        critical_stock_threshold: number;
+    }[];
 };
 
 export default function Dashboard({
@@ -41,7 +45,7 @@ export default function Dashboard({
         {
             title: 'Kritik Stok',
             value: criticalStock.toString(),
-            description: 'Stok miktarı 10’dan az olan ürünler',
+            description: 'Kategorisinin kritik stok eşiğinin altındaki ürünler',
         },
     ];
 
@@ -95,6 +99,10 @@ export default function Dashboard({
                                     <span>{product.name}</span>
                                     <span className="font-semibold text-destructive">
                                         {product.stock_quantity} adet
+                                        <span className="ml-1 font-normal text-muted-foreground">
+                                            (eşik:{' '}
+                                            {product.critical_stock_threshold})
+                                        </span>
                                     </span>
                                 </li>
                             ))}
