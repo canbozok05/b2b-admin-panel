@@ -12,6 +12,8 @@ use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
@@ -85,6 +87,21 @@ class DatabaseSeeder extends Seeder
     ];
 
     /**
+     * Yaprak kategori adına göre, o kategorinin ilk ürününe eklenecek gerçekçi görsel dosyası.
+     *
+     * @var array<string, string>
+     */
+    private array $productImages = [
+        'Dizüstü Bilgisayar' => 'laptop.jpg',
+        'Akıllı Telefon' => 'phone.jpg',
+        'Buzdolabı' => 'fridge.jpg',
+        'Çamaşır Makinesi' => 'washing-machine.jpg',
+        'Koltuk Takımı' => 'sofa.jpg',
+        'Yatak' => 'bed.jpg',
+        'Nevresim Takımı' => 'bedding.jpg',
+    ];
+
+    /**
      * Seed the application's database.
      */
     public function run(): void
@@ -151,15 +168,30 @@ class DatabaseSeeder extends Seeder
     private function seedProducts(array $leafCategories): void
     {
         foreach ($this->productCatalog as $leafName => $products) {
-            foreach ($products as $productData) {
-                Product::factory()->create([
+            foreach ($products as $index => $productData) {
+                $product = Product::factory()->create([
                     'category_id' => $leafCategories[$leafName]->id,
                     'name' => $productData['name'],
                     'sku' => $productData['sku'],
                     'price' => fake()->randomFloat(2, $productData['min'], $productData['max']),
                 ]);
+
+                if ($index === 0 && isset($this->productImages[$leafName])) {
+                    $this->attachSeedImage($product, $this->productImages[$leafName]);
+                }
             }
         }
+    }
+
+    private function attachSeedImage(Product $product, string $filename): void
+    {
+        $source = database_path('seeders/images/'.$filename);
+        $extension = pathinfo($filename, PATHINFO_EXTENSION);
+        $storedPath = 'products/'.Str::uuid().'.'.$extension;
+
+        Storage::disk('public')->put($storedPath, File::get($source));
+
+        $product->images()->create(['path' => $storedPath]);
     }
 
     /**
