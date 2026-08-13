@@ -26,8 +26,21 @@ type Props = {
 
 type TargetType = 'product' | 'category';
 
+// Sunucudan gelen UTC zaman damgasını, datetime-local input'unun beklediği
+// "yerel saatte YYYY-MM-DDTHH:mm" biçimine çevirir.
 function toDatetimeLocal(value: string): string {
-    return value.slice(0, 16);
+    const date = new Date(value);
+    const localTime = new Date(
+        date.getTime() - date.getTimezoneOffset() * 60000,
+    );
+
+    return localTime.toISOString().slice(0, 16);
+}
+
+// datetime-local input'undaki yerel saati, sunucuya göndermeden önce gerçek bir
+// UTC zaman damgasına çevirir.
+function toUtcIso(localValue: string): string {
+    return new Date(localValue).toISOString();
 }
 
 export default function CampaignEdit({
@@ -39,7 +52,7 @@ export default function CampaignEdit({
         campaign.category_id ? 'category' : 'product',
     );
 
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, put, processing, errors, transform } = useForm({
         name: campaign.name,
         discount_type: campaign.discount_type,
         discount_value: campaign.discount_value,
@@ -48,6 +61,16 @@ export default function CampaignEdit({
         product_id: campaign.product_id ? String(campaign.product_id) : '',
         category_id: campaign.category_id ? String(campaign.category_id) : '',
     });
+
+    transform((formData) => ({
+        ...formData,
+        starts_at: formData.starts_at
+            ? toUtcIso(formData.starts_at)
+            : formData.starts_at,
+        ends_at: formData.ends_at
+            ? toUtcIso(formData.ends_at)
+            : formData.ends_at,
+    }));
 
     function handleTargetTypeChange(type: TargetType) {
         setTargetType(type);

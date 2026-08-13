@@ -14,10 +14,17 @@ type Props = {
 
 type TargetType = 'product' | 'category';
 
+// datetime-local input'u tarayıcının yerel saatini içerir (saat dilimi bilgisi yok).
+// Sunucuya göndermeden önce bunu gerçek bir UTC zaman damgasına çeviriyoruz, yoksa
+// sunucu bu değeri olduğu gibi UTC sanıp saat dilimi farkı kadar kaydırılmış kaydeder.
+function toUtcIso(localValue: string): string {
+    return new Date(localValue).toISOString();
+}
+
 export default function CampaignCreate({ products, categories }: Props) {
     const [targetType, setTargetType] = useState<TargetType>('product');
 
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors, transform } = useForm({
         name: '',
         discount_type: 'percentage',
         discount_value: '',
@@ -26,6 +33,16 @@ export default function CampaignCreate({ products, categories }: Props) {
         product_id: '',
         category_id: '',
     });
+
+    transform((formData) => ({
+        ...formData,
+        starts_at: formData.starts_at
+            ? toUtcIso(formData.starts_at)
+            : formData.starts_at,
+        ends_at: formData.ends_at
+            ? toUtcIso(formData.ends_at)
+            : formData.ends_at,
+    }));
 
     function handleTargetTypeChange(type: TargetType) {
         setTargetType(type);
