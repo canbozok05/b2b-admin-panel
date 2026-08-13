@@ -128,35 +128,39 @@ class OrderController extends Controller
     }
 
     /**
-     * Siparişin teslimat adresini doğrular: müşterinin kayıtlı adresi varsa
-     * bunlardan birinin seçilmesi, yoksa yeni bir adres girilmesi zorunludur.
+     * Siparişin teslimat adresini doğrular. Müşterinin kayıtlı adresi varsa
+     * ya bunlardan birinin seçilmesi ya da yeni bir adres girilmesi (address_mode=new)
+     * gerekir; hiç adresi yoksa yeni bir adres girilmesi zorunludur.
      *
      * @return array{0: int|null, 1: array{label: string, address: string}|null}
      */
     private function resolveOrderAddress(Request $request, Customer $customer): array
     {
-        if ($customer->addresses()->exists()) {
+        $hasAddresses = $customer->addresses()->exists();
+        $wantsNewAddress = ! $hasAddresses || $request->input('address_mode') === 'new';
+
+        if ($wantsNewAddress) {
             $validated = $request->validate([
-                'customer_address_id' => [
-                    'required',
-                    Rule::exists('customer_addresses', 'id')->where(
-                        fn ($query) => $query->where('customer_id', $customer->id)
-                    ),
-                ],
+                'new_address_label' => 'required|string|max:100',
+                'new_address_text' => 'required|string|max:500',
             ]);
 
-            return [(int) $validated['customer_address_id'], null];
+            return [null, [
+                'label' => $validated['new_address_label'],
+                'address' => $validated['new_address_text'],
+            ]];
         }
 
         $validated = $request->validate([
-            'new_address_label' => 'required|string|max:100',
-            'new_address_text' => 'required|string|max:500',
+            'customer_address_id' => [
+                'required',
+                Rule::exists('customer_addresses', 'id')->where(
+                    fn ($query) => $query->where('customer_id', $customer->id)
+                ),
+            ],
         ]);
 
-        return [null, [
-            'label' => $validated['new_address_label'],
-            'address' => $validated['new_address_text'],
-        ]];
+        return [(int) $validated['customer_address_id'], null];
     }
 
     public function edit(int $id): Response

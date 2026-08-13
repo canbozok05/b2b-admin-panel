@@ -1,4 +1,5 @@
 import { Head, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import orders from '@/routes/orders';
 
 type Address = {
@@ -56,12 +57,21 @@ type ItemRow = {
     quantity: string;
 };
 
+type AddressMode = 'existing' | 'new';
+
 export default function OrderEdit({ order, customers, products }: Props) {
+    const [addressMode, setAddressMode] = useState<AddressMode>(
+        order.customer_address_id ? 'existing' : 'new',
+    );
+
     const { data, setData, put, processing, errors } = useForm({
         customer_id: String(order.customer_id),
         customer_address_id: order.customer_address_id
             ? String(order.customer_address_id)
             : '',
+        address_mode: (order.customer_address_id
+            ? 'existing'
+            : 'new') as AddressMode,
         new_address_label: '',
         new_address_text: '',
         items: order.order_items.map((item): ItemRow => ({
@@ -79,6 +89,20 @@ export default function OrderEdit({ order, customers, products }: Props) {
         setData('customer_address_id', '');
         setData('new_address_label', '');
         setData('new_address_text', '');
+        setData('address_mode', 'existing');
+        setAddressMode('existing');
+    }
+
+    function handleAddressModeChange(mode: AddressMode) {
+        setAddressMode(mode);
+        setData('address_mode', mode);
+
+        if (mode === 'existing') {
+            setData('new_address_label', '');
+            setData('new_address_text', '');
+        } else {
+            setData('customer_address_id', '');
+        }
     }
 
     function updateItem(index: number, field: keyof ItemRow, value: string) {
@@ -182,7 +206,36 @@ export default function OrderEdit({ order, customers, products }: Props) {
                             <label className="text-sm font-medium">
                                 Teslimat Adresi (zorunlu)
                             </label>
-                            {selectedCustomer.addresses.length > 0 ? (
+
+                            {selectedCustomer.addresses.length > 0 && (
+                                <div className="mt-1 mb-2 flex gap-4 text-sm">
+                                    <label className="flex items-center gap-1">
+                                        <input
+                                            type="radio"
+                                            checked={addressMode === 'existing'}
+                                            onChange={() =>
+                                                handleAddressModeChange(
+                                                    'existing',
+                                                )
+                                            }
+                                        />
+                                        Kayıtlı Adres Seç
+                                    </label>
+                                    <label className="flex items-center gap-1">
+                                        <input
+                                            type="radio"
+                                            checked={addressMode === 'new'}
+                                            onChange={() =>
+                                                handleAddressModeChange('new')
+                                            }
+                                        />
+                                        Yeni Adres Gir
+                                    </label>
+                                </div>
+                            )}
+
+                            {selectedCustomer.addresses.length > 0 &&
+                            addressMode === 'existing' ? (
                                 <select
                                     value={data.customer_address_id}
                                     onChange={(e) =>
@@ -202,10 +255,13 @@ export default function OrderEdit({ order, customers, products }: Props) {
                                 </select>
                             ) : (
                                 <div className="flex flex-col gap-2 rounded-md border p-3">
-                                    <p className="text-sm text-muted-foreground">
-                                        Bu müşterinin kayıtlı adresi yok, bu
-                                        siparişle birlikte ekle.
-                                    </p>
+                                    {selectedCustomer.addresses.length ===
+                                        0 && (
+                                        <p className="text-sm text-muted-foreground">
+                                            Bu müşterinin kayıtlı adresi yok, bu
+                                            siparişle birlikte ekle.
+                                        </p>
+                                    )}
 
                                     <div>
                                         <label className="text-sm font-medium">

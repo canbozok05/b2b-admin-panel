@@ -285,3 +285,52 @@ test('an order creates and links a new address when the customer has none', func
     $order = Order::latest()->first();
     expect($order->customer_address_id)->toBe($address->id);
 });
+
+test('an order requires the delivery address to be selected when the customer has one', function () {
+    actingAsSuperAdmin();
+
+    $customer = Customer::factory()->create();
+    CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
+    $product = Product::factory()->create(['stock_quantity' => 10, 'price' => 50]);
+
+    $response = $this->post(route('orders.store'), [
+        'customer_id' => $customer->id,
+        'items' => [
+            ['product_id' => $product->id, 'quantity' => 1],
+        ],
+    ]);
+
+    $response->assertSessionHasErrors('customer_address_id');
+    $this->assertDatabaseCount('orders', 0);
+});
+
+test('a customer with registered addresses can still enter a new one for the order', function () {
+    actingAsSuperAdmin();
+
+    $customer = Customer::factory()->create();
+    CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Eski adres']);
+    $product = Product::factory()->create(['stock_quantity' => 10, 'price' => 50]);
+
+    $response = $this->post(route('orders.store'), [
+        'customer_id' => $customer->id,
+        'address_mode' => 'new',
+        'new_address_label' => 'İş',
+        'new_address_text' => 'Yeni iş adresi',
+        'items' => [
+            ['product_id' => $product->id, 'quantity' => 1],
+        ],
+    ]);
+
+    $response->assertRedirect(route('orders.index'));
+
+    $this->assertDatabaseHas('customer_addresses', [
+        'customer_id' => $customer->id,
+        'label' => 'İş',
+        'address' => 'Yeni iş adresi',
+    ]);
+
+    $newAddress = CustomerAddress::where('label', 'İş')->first();
+    $order = Order::latest()->first();
+    expect($order->customer_address_id)->toBe($newAddress->id);
+    expect($customer->addresses()->count())->toBe(2);
+});
