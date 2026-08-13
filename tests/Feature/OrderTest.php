@@ -59,11 +59,12 @@ test('creating an order deducts stock and snapshots the unit price', function ()
     actingAsSuperAdmin();
 
     $customer = Customer::factory()->create();
-    CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
+    $address = CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
     $product = Product::factory()->create(['stock_quantity' => 10, 'price' => 50]);
 
     $response = $this->post(route('orders.store'), [
         'customer_id' => $customer->id,
+        'customer_address_id' => $address->id,
         'items' => [
             ['product_id' => $product->id, 'quantity' => 3],
         ],
@@ -91,11 +92,12 @@ test('an order cannot be created for more than the available stock', function ()
     actingAsSuperAdmin();
 
     $customer = Customer::factory()->create();
-    CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
+    $address = CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
     $product = Product::factory()->create(['stock_quantity' => 2]);
 
     $response = $this->post(route('orders.store'), [
         'customer_id' => $customer->id,
+        'customer_address_id' => $address->id,
         'items' => [
             ['product_id' => $product->id, 'quantity' => 5],
         ],
@@ -113,12 +115,13 @@ test('editing an order reconciles stock correctly', function () {
     actingAsSuperAdmin();
 
     $customer = Customer::factory()->create();
-    CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
+    $address = CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
     $productA = Product::factory()->create(['stock_quantity' => 10, 'price' => 20]);
     $productB = Product::factory()->create(['stock_quantity' => 10, 'price' => 30]);
 
     $this->post(route('orders.store'), [
         'customer_id' => $customer->id,
+        'customer_address_id' => $address->id,
         'items' => [
             ['product_id' => $productA->id, 'quantity' => 4],
         ],
@@ -131,6 +134,7 @@ test('editing an order reconciles stock correctly', function () {
 
     $response = $this->put(route('orders.update', $order->id), [
         'customer_id' => $customer->id,
+        'customer_address_id' => $address->id,
         'items' => [
             ['product_id' => $productB->id, 'quantity' => 2],
         ],
@@ -154,11 +158,12 @@ test('deleting an order restores stock', function () {
     actingAsSuperAdmin();
 
     $customer = Customer::factory()->create();
-    CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
+    $address = CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
     $product = Product::factory()->create(['stock_quantity' => 10, 'price' => 20]);
 
     $this->post(route('orders.store'), [
         'customer_id' => $customer->id,
+        'customer_address_id' => $address->id,
         'items' => [
             ['product_id' => $product->id, 'quantity' => 4],
         ],
@@ -215,6 +220,7 @@ test('an order cannot use another customer\'s delivery address', function () {
     actingAsSuperAdmin();
 
     $customer = Customer::factory()->create();
+    CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
     $otherCustomer = Customer::factory()->create();
     $otherAddress = CustomerAddress::create([
         'customer_id' => $otherCustomer->id,

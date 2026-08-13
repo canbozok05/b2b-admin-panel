@@ -70,19 +70,13 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
-            'customer_address_id' => [
-                'nullable',
-                Rule::exists('customer_addresses', 'id')->where(
-                    fn ($query) => $query->where('customer_id', $request->customer_id)
-                ),
-            ],
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1|max:1000000',
         ]);
 
         $customer = Customer::findOrFail((int) $validated['customer_id']);
-        $newAddress = $this->validateNewCustomerAddress($request, $customer);
+        [$existingAddressId, $newAddress] = $this->resolveOrderAddress($request, $customer);
 
         foreach ($validated['items'] as $item) {
             $product = Product::findOrFail((int) $item['product_id']);
@@ -94,14 +88,14 @@ class OrderController extends Controller
             }
         }
 
-        DB::transaction(function () use ($validated, $customer, $newAddress) {
+        DB::transaction(function () use ($validated, $customer, $existingAddressId, $newAddress) {
             do {
                 $orderNumber = 'ORD-'.random_int(100000, 999999);
             } while (Order::where('order_number', $orderNumber)->exists());
 
             $customerAddressId = $newAddress
                 ? $customer->addresses()->create($newAddress)->id
-                : $validated['customer_address_id'] ?? null;
+                : $existingAddressId;
 
             $totalAmount = 0;
             foreach ($validated['items'] as $item) {
@@ -134,14 +128,24 @@ class OrderController extends Controller
     }
 
     /**
-     * Müşterinin kayıtlı adresi yoksa, siparişle birlikte girilen yeni adresi doğrular.
+     * Siparişin teslimat adresini doğrular: müşterinin kayıtlı adresi varsa
+     * bunlardan birinin seçilmesi, yoksa yeni bir adres girilmesi zorunludur.
      *
-     * @return array{label: string, address: string}|null
+     * @return array{0: int|null, 1: array{label: string, address: string}|null}
      */
-    private function validateNewCustomerAddress(Request $request, Customer $customer): ?array
+    private function resolveOrderAddress(Request $request, Customer $customer): array
     {
         if ($customer->addresses()->exists()) {
-            return null;
+            $validated = $request->validate([
+                'customer_address_id' => [
+                    'required',
+                    Rule::exists('customer_addresses', 'id')->where(
+                        fn ($query) => $query->where('customer_id', $customer->id)
+                    ),
+                ],
+            ]);
+
+            return [(int) $validated['customer_address_id'], null];
         }
 
         $validated = $request->validate([
@@ -149,10 +153,10 @@ class OrderController extends Controller
             'new_address_text' => 'required|string|max:500',
         ]);
 
-        return [
+        return [null, [
             'label' => $validated['new_address_label'],
             'address' => $validated['new_address_text'],
-        ];
+        ]];
     }
 
     public function edit(int $id): Response
@@ -172,21 +176,15 @@ class OrderController extends Controller
 
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
-            'customer_address_id' => [
-                'nullable',
-                Rule::exists('customer_addresses', 'id')->where(
-                    fn ($query) => $query->where('customer_id', $request->customer_id)
-                ),
-            ],
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1|max:1000000',
         ]);
 
         $customer = Customer::findOrFail((int) $validated['customer_id']);
-        $newAddress = $this->validateNewCustomerAddress($request, $customer);
+        [$existingAddressId, $newAddress] = $this->resolveOrderAddress($request, $customer);
 
-        DB::transaction(function () use ($order, $validated, $customer, $newAddress) {
+        DB::transaction(function () use ($order, $validated, $customer, $existingAddressId, $newAddress) {
             foreach ($order->orderItems as $oldItem) {
                 Product::where('id', $oldItem->product_id)->increment('stock_quantity', $oldItem->quantity);
             }
@@ -194,7 +192,7 @@ class OrderController extends Controller
 
             $customerAddressId = $newAddress
                 ? $customer->addresses()->create($newAddress)->id
-                : $validated['customer_address_id'] ?? null;
+                : $existingAddressId;
 
             $totalAmount = 0;
             foreach ($validated['items'] as $item) {

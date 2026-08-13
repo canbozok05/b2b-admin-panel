@@ -233,7 +233,7 @@ test('an order placed during an active campaign uses the discounted unit price',
     actingAsSuperAdmin();
 
     $customer = Customer::factory()->create();
-    CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
+    $address = CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
     $product = Product::factory()->create(['price' => 1000, 'stock_quantity' => 10]);
 
     Campaign::factory()->create([
@@ -245,6 +245,7 @@ test('an order placed during an active campaign uses the discounted unit price',
 
     $response = $this->post(route('orders.store'), [
         'customer_id' => $customer->id,
+        'customer_address_id' => $address->id,
         'items' => [
             ['product_id' => $product->id, 'quantity' => 2],
         ],

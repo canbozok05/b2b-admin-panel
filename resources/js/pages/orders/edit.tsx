@@ -180,7 +180,7 @@ export default function OrderEdit({ order, customers, products }: Props) {
                     {selectedCustomer && (
                         <div>
                             <label className="text-sm font-medium">
-                                Teslimat Adresi
+                                Teslimat Adresi (zorunlu)
                             </label>
                             {selectedCustomer.addresses.length > 0 ? (
                                 <select
@@ -193,7 +193,7 @@ export default function OrderEdit({ order, customers, products }: Props) {
                                     }
                                     className="w-full rounded-md border p-2"
                                 >
-                                    <option value="">Seçilmedi</option>
+                                    <option value="">Seçiniz</option>
                                     {selectedCustomer.addresses.map((addr) => (
                                         <option key={addr.id} value={addr.id}>
                                             {addr.label} — {addr.address}
