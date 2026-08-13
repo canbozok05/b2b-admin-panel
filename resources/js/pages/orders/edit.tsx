@@ -13,11 +13,21 @@ type Customer = {
     addresses: Address[];
 };
 
+type ActiveCampaign = {
+    id: number;
+    name: string;
+    discount_type: string;
+    discount_value: string;
+    ends_at: string;
+};
+
 type Product = {
     id: number;
     name: string;
     sku: string;
     price: string;
+    discounted_price: string;
+    active_campaign: ActiveCampaign | null;
     stock_quantity: number;
     category: { id: number; vat_rate: string } | null;
 };
@@ -96,7 +106,7 @@ export default function OrderEdit({ order, customers, products }: Props) {
             return 0;
         }
 
-        return Number(product.price) * (Number(item.quantity) || 0);
+        return Number(product.discounted_price) * (Number(item.quantity) || 0);
     }
 
     // Fiyat KDV dahil olduğu için, KDV oranı ve tutarını geriye doğru hesaplıyoruz:
@@ -236,6 +246,9 @@ export default function OrderEdit({ order, customers, products }: Props) {
                                                     {product.name} (
                                                     {product.sku}) — stok:{' '}
                                                     {product.stock_quantity}
+                                                    {product.active_campaign
+                                                        ? ' — Kampanyalı'
+                                                        : ''}
                                                 </option>
                                             ))}
                                         </select>
@@ -271,6 +284,26 @@ export default function OrderEdit({ order, customers, products }: Props) {
                                         <p className="text-xs text-muted-foreground">
                                             KDV: %{vat.rate} (
                                             {formatTl(vat.amount)} ₺)
+                                        </p>
+                                    )}
+
+                                    {selectedProduct?.active_campaign && (
+                                        <p className="text-xs text-green-600">
+                                            {
+                                                selectedProduct.active_campaign
+                                                    .name
+                                            }{' '}
+                                            ile birim fiyat{' '}
+                                            {formatTl(
+                                                Number(selectedProduct.price),
+                                            )}{' '}
+                                            ₺ yerine{' '}
+                                            {formatTl(
+                                                Number(
+                                                    selectedProduct.discounted_price,
+                                                ),
+                                            )}{' '}
+                                            ₺
                                         </p>
                                     )}
                                 </div>

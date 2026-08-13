@@ -3,11 +3,21 @@ import { useState } from 'react';
 import products from '@/routes/products';
 import type { Auth } from '@/types/auth';
 
+type ActiveCampaign = {
+    id: number;
+    name: string;
+    discount_type: string;
+    discount_value: string;
+    ends_at: string;
+};
+
 type Product = {
     id: number;
     name: string;
     sku: string;
     price: string;
+    discounted_price: string;
+    active_campaign: ActiveCampaign | null;
     stock_quantity: number;
     is_published: boolean;
     category: { id: number; name: string } | null;
@@ -95,7 +105,23 @@ export default function ProductIndex({
                                         ? product.category.name
                                         : '—'}
                                 </td>
-                                <td className="p-2">{product.price}</td>
+                                <td className="p-2">
+                                    {product.active_campaign ? (
+                                        <div>
+                                            <span className="text-muted-foreground line-through">
+                                                {product.price}
+                                            </span>{' '}
+                                            <span className="font-semibold text-green-600">
+                                                {product.discounted_price} ₺
+                                            </span>
+                                            <p className="text-xs text-muted-foreground">
+                                                {product.active_campaign.name}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        product.price
+                                    )}
+                                </td>
                                 <td className="p-2">
                                     {product.stock_quantity}
                                 </td>

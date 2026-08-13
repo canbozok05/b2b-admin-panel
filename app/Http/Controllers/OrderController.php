@@ -6,6 +6,7 @@ use App\Mail\OrderStatusUpdated;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -41,9 +42,28 @@ class OrderController extends Controller
     {
         return Inertia::render('orders/create', [
             'customers' => Customer::with('addresses')->get(),
-            'products' => Product::with('category:id,vat_rate')
-                ->get(['id', 'category_id', 'name', 'sku', 'price', 'stock_quantity']),
+            'products' => $this->productsWithCampaigns(),
         ]);
+    }
+
+    /**
+     * @return Collection<int, Product>
+     */
+    private function productsWithCampaigns()
+    {
+        return Product::with('category:id,vat_rate')
+            ->get(['id', 'category_id', 'name', 'sku', 'price', 'stock_quantity'])
+            ->each(function (Product $product) {
+                $campaign = $product->activeCampaign();
+                $product->discounted_price = $product->discountedPrice();
+                $product->active_campaign = $campaign ? [
+                    'id' => $campaign->id,
+                    'name' => $campaign->name,
+                    'discount_type' => $campaign->discount_type,
+                    'discount_value' => $campaign->discount_value,
+                    'ends_at' => $campaign->ends_at,
+                ] : null;
+            });
     }
 
     public function store(Request $request): RedirectResponse
@@ -79,7 +99,7 @@ class OrderController extends Controller
             $totalAmount = 0;
             foreach ($validated['items'] as $item) {
                 $product = Product::findOrFail((int) $item['product_id']);
-                $totalAmount += $product->price * $item['quantity'];
+                $totalAmount += $product->discountedPrice() * $item['quantity'];
             }
 
             $order = Order::create([
@@ -96,7 +116,7 @@ class OrderController extends Controller
                 $order->orderItems()->create([
                     'product_id' => $product->id,
                     'quantity' => $item['quantity'],
-                    'unit_price' => $product->price,
+                    'unit_price' => $product->discountedPrice(),
                 ]);
 
                 $product->decrement('stock_quantity', $item['quantity']);
@@ -113,8 +133,7 @@ class OrderController extends Controller
         return Inertia::render('orders/edit', [
             'order' => $order,
             'customers' => Customer::with('addresses')->get(),
-            'products' => Product::with('category:id,vat_rate')
-                ->get(['id', 'category_id', 'name', 'sku', 'price', 'stock_quantity']),
+            'products' => $this->productsWithCampaigns(),
         ]);
     }
 
@@ -144,7 +163,7 @@ class OrderController extends Controller
             $totalAmount = 0;
             foreach ($validated['items'] as $item) {
                 $product = Product::findOrFail((int) $item['product_id']);
-                $totalAmount += $product->price * $item['quantity'];
+                $totalAmount += $product->discountedPrice() * $item['quantity'];
             }
 
             $order->update([
@@ -159,7 +178,7 @@ class OrderController extends Controller
                 $order->orderItems()->create([
                     'product_id' => $product->id,
                     'quantity' => $item['quantity'],
-                    'unit_price' => $product->price,
+                    'unit_price' => $product->discountedPrice(),
                 ]);
 
                 $product->decrement('stock_quantity', $item['quantity']);

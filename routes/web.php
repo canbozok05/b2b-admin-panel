@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerAddressController;
 use App\Http\Controllers\CustomerController;
@@ -50,6 +51,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('categories/{id}', [CategoryController::class, 'update'])->name('categories.update');
 
         Route::delete('categories/{id}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+
+        Route::get('campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
+        Route::get('campaigns/create', [CampaignController::class, 'create'])->name('campaigns.create');
+        Route::post('campaigns', [CampaignController::class, 'store'])->name('campaigns.store');
+        Route::get('campaigns/{id}/edit', [CampaignController::class, 'edit'])->name('campaigns.edit');
+        Route::put('campaigns/{id}', [CampaignController::class, 'update'])->name('campaigns.update');
+        Route::delete('campaigns/{id}', [CampaignController::class, 'destroy'])->name('campaigns.destroy');
 
         Route::delete('products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
 

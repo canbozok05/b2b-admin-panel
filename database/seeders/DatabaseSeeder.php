@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Campaign;
 use App\Models\Category;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
@@ -119,6 +120,7 @@ class DatabaseSeeder extends Seeder
 
         $leafCategories = $this->seedCategories();
         $this->seedProducts($leafCategories);
+        $this->seedCampaigns($leafCategories);
 
         $customers = Customer::factory()->count(10)->create();
         $this->seedCustomerAddresses($customers);
@@ -185,6 +187,36 @@ class DatabaseSeeder extends Seeder
                     $this->attachSeedImage($product, $this->productImages[$leafName]);
                 }
             }
+        }
+    }
+
+    /**
+     * @param  array<string, Category>  $leafCategories
+     */
+    private function seedCampaigns(array $leafCategories): void
+    {
+        $phone = Product::where('name', 'Samsung Galaxy A54 Akıllı Telefon')->first();
+
+        if ($phone) {
+            Campaign::create([
+                'name' => 'Yaz Telefon Kampanyası',
+                'discount_type' => 'percentage',
+                'discount_value' => 15,
+                'starts_at' => now()->subDays(2),
+                'ends_at' => now()->addWeek(),
+                'product_id' => $phone->id,
+            ]);
+        }
+
+        if (isset($leafCategories['Buzdolabı'])) {
+            Campaign::create([
+                'name' => 'Beyaz Eşya Fırsatı',
+                'discount_type' => 'fixed',
+                'discount_value' => 1000,
+                'starts_at' => now()->subDay(),
+                'ends_at' => now()->addDays(10),
+                'category_id' => $leafCategories['Buzdolabı']->id,
+            ]);
         }
     }
 

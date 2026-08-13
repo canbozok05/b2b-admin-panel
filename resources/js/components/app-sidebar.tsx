@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
+    BadgePercent,
     BookOpen,
     FolderGit2,
     LayoutGrid,
@@ -24,6 +25,7 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import admins from '@/routes/admins';
+import campaigns from '@/routes/campaigns';
 import categories from '@/routes/categories';
 import customers from '@/routes/customers';
 import orders from '@/routes/orders';
@@ -60,6 +62,12 @@ const allNavItems: NavItemWithRoles[] = [
         title: 'Müşteriler',
         href: customers.index(),
         icon: Contact,
+        roles: ['Süper Admin'],
+    },
+    {
+        title: 'Kampanyalar',
+        href: campaigns.index(),
+        icon: BadgePercent,
         roles: ['Süper Admin'],
     },
     {

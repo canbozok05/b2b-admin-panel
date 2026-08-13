@@ -18,7 +18,18 @@ class ProductController extends Controller
             ->when($request->search, function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })
-            ->get();
+            ->get()
+            ->each(function (Product $product) {
+                $campaign = $product->activeCampaign();
+                $product->discounted_price = $product->discountedPrice();
+                $product->active_campaign = $campaign ? [
+                    'id' => $campaign->id,
+                    'name' => $campaign->name,
+                    'discount_type' => $campaign->discount_type,
+                    'discount_value' => $campaign->discount_value,
+                    'ends_at' => $campaign->ends_at,
+                ] : null;
+            });
 
         return Inertia::render('products/index', [
             'products' => $products,
