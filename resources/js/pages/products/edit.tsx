@@ -140,7 +140,7 @@ export default function ProductEdit({ product, categories }: Props) {
                     </div>
 
                     <div>
-                        <label className="text-sm font-medium">Fiyat</label>
+                        <label className="text-sm font-medium">Fiyat (₺)</label>
                         <input
                             type="number"
                             step="0.01"

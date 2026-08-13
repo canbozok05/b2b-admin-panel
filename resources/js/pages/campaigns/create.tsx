@@ -185,7 +185,8 @@ export default function CampaignCreate({ products, categories }: Props) {
 
                     <div>
                         <label className="text-sm font-medium">
-                            İndirim Değeri
+                            İndirim Değeri (
+                            {data.discount_type === 'percentage' ? '%' : '₺'})
                         </label>
                         <input
                             type="number"

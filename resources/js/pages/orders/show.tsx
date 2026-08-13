@@ -182,7 +182,8 @@ export default function OrderShow({ order }: Props) {
                                         </td>
                                         <td className="p-2">{item.quantity}</td>
                                         <td className="p-2">
-                                            {item.unit_price}
+                                            {formatTl(Number(item.unit_price))}{' '}
+                                            ₺
                                         </td>
                                         <td className="p-2">
                                             %{vat.rate} ({formatTl(vat.amount)}{' '}
@@ -199,7 +200,7 @@ export default function OrderShow({ order }: Props) {
                             Toplam KDV: {formatTl(totalVat)} ₺
                         </p>
                         <p className="text-lg font-semibold">
-                            Toplam: {order.total_amount}
+                            Toplam: {formatTl(Number(order.total_amount))} ₺
                         </p>
                     </div>
                 </div>

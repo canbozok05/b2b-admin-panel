@@ -109,7 +109,7 @@ export default function ProductIndex({
                                     {product.active_campaign ? (
                                         <div>
                                             <span className="text-muted-foreground line-through">
-                                                {product.price}
+                                                {product.price} ₺
                                             </span>{' '}
                                             <span className="font-semibold text-green-600">
                                                 {product.discounted_price} ₺
@@ -119,7 +119,7 @@ export default function ProductIndex({
                                             </p>
                                         </div>
                                     ) : (
-                                        product.price
+                                        `${product.price} ₺`
                                     )}
                                 </td>
                                 <td className="p-2">

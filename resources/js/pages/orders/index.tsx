@@ -72,7 +72,13 @@ export default function OrderIndex({ orders: allOrders }: Props) {
                                 <td className="p-2">
                                     {order.customer ? order.customer.name : '—'}
                                 </td>
-                                <td className="p-2">{order.total_amount}</td>
+                                <td className="p-2">
+                                    {Number(order.total_amount).toLocaleString(
+                                        'tr-TR',
+                                        { minimumFractionDigits: 2 },
+                                    )}{' '}
+                                    ₺
+                                </td>
                                 <td className="p-2">
                                     {statusLabels[order.status] ?? order.status}
                                 </td>
