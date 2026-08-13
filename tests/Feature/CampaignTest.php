@@ -3,6 +3,7 @@
 use App\Models\Campaign;
 use App\Models\Category;
 use App\Models\Customer;
+use App\Models\CustomerAddress;
 use App\Models\Product;
 
 test('depo görevlisi cannot access the campaigns page', function () {
@@ -232,6 +233,7 @@ test('an order placed during an active campaign uses the discounted unit price',
     actingAsSuperAdmin();
 
     $customer = Customer::factory()->create();
+    CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
     $product = Product::factory()->create(['price' => 1000, 'stock_quantity' => 10]);
 
     Campaign::factory()->create([

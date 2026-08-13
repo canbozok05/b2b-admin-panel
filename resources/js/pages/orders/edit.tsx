@@ -62,6 +62,8 @@ export default function OrderEdit({ order, customers, products }: Props) {
         customer_address_id: order.customer_address_id
             ? String(order.customer_address_id)
             : '',
+        new_address_label: '',
+        new_address_text: '',
         items: order.order_items.map((item): ItemRow => ({
             product_id: String(item.product_id),
             quantity: String(item.quantity),
@@ -75,6 +77,8 @@ export default function OrderEdit({ order, customers, products }: Props) {
     function handleCustomerChange(customerId: string) {
         setData('customer_id', customerId);
         setData('customer_address_id', '');
+        setData('new_address_label', '');
+        setData('new_address_text', '');
     }
 
     function updateItem(index: number, field: keyof ItemRow, value: string) {
@@ -197,9 +201,58 @@ export default function OrderEdit({ order, customers, products }: Props) {
                                     ))}
                                 </select>
                             ) : (
-                                <p className="text-sm text-muted-foreground">
-                                    Bu müşterinin kayıtlı adresi yok.
-                                </p>
+                                <div className="flex flex-col gap-2 rounded-md border p-3">
+                                    <p className="text-sm text-muted-foreground">
+                                        Bu müşterinin kayıtlı adresi yok, bu
+                                        siparişle birlikte ekle.
+                                    </p>
+
+                                    <div>
+                                        <label className="text-sm font-medium">
+                                            Adres Etiketi
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={data.new_address_label}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'new_address_label',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            placeholder="örn. Ev, İş, Okul"
+                                            maxLength={100}
+                                            className="w-full rounded-md border p-2"
+                                        />
+                                        {errors.new_address_label && (
+                                            <p className="text-sm text-destructive">
+                                                {errors.new_address_label}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div>
+                                        <label className="text-sm font-medium">
+                                            Adres
+                                        </label>
+                                        <textarea
+                                            value={data.new_address_text}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'new_address_text',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            maxLength={500}
+                                            className="w-full rounded-md border p-2"
+                                        />
+                                        {errors.new_address_text && (
+                                            <p className="text-sm text-destructive">
+                                                {errors.new_address_text}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
                             )}
                             {errors.customer_address_id && (
                                 <p className="text-sm text-destructive">

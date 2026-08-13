@@ -59,6 +59,7 @@ test('creating an order deducts stock and snapshots the unit price', function ()
     actingAsSuperAdmin();
 
     $customer = Customer::factory()->create();
+    CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
     $product = Product::factory()->create(['stock_quantity' => 10, 'price' => 50]);
 
     $response = $this->post(route('orders.store'), [
@@ -90,6 +91,7 @@ test('an order cannot be created for more than the available stock', function ()
     actingAsSuperAdmin();
 
     $customer = Customer::factory()->create();
+    CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
     $product = Product::factory()->create(['stock_quantity' => 2]);
 
     $response = $this->post(route('orders.store'), [
@@ -111,6 +113,7 @@ test('editing an order reconciles stock correctly', function () {
     actingAsSuperAdmin();
 
     $customer = Customer::factory()->create();
+    CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
     $productA = Product::factory()->create(['stock_quantity' => 10, 'price' => 20]);
     $productB = Product::factory()->create(['stock_quantity' => 10, 'price' => 30]);
 
@@ -151,6 +154,7 @@ test('deleting an order restores stock', function () {
     actingAsSuperAdmin();
 
     $customer = Customer::factory()->create();
+    CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
     $product = Product::factory()->create(['stock_quantity' => 10, 'price' => 20]);
 
     $this->post(route('orders.store'), [
@@ -231,7 +235,7 @@ test('an order cannot use another customer\'s delivery address', function () {
     $this->assertDatabaseCount('orders', 0);
 });
 
-test('an order can be created without selecting a delivery address', function () {
+test('an order requires a new address when the customer has none', function () {
     actingAsSuperAdmin();
 
     $customer = Customer::factory()->create();
@@ -244,8 +248,34 @@ test('an order can be created without selecting a delivery address', function ()
         ],
     ]);
 
+    $response->assertSessionHasErrors(['new_address_label', 'new_address_text']);
+    $this->assertDatabaseCount('orders', 0);
+});
+
+test('an order creates and links a new address when the customer has none', function () {
+    actingAsSuperAdmin();
+
+    $customer = Customer::factory()->create();
+    $product = Product::factory()->create(['stock_quantity' => 10, 'price' => 50]);
+
+    $response = $this->post(route('orders.store'), [
+        'customer_id' => $customer->id,
+        'new_address_label' => 'Ev',
+        'new_address_text' => 'Test mahallesi, test sokak no: 1',
+        'items' => [
+            ['product_id' => $product->id, 'quantity' => 1],
+        ],
+    ]);
+
     $response->assertRedirect(route('orders.index'));
 
+    $this->assertDatabaseHas('customer_addresses', [
+        'customer_id' => $customer->id,
+        'label' => 'Ev',
+        'address' => 'Test mahallesi, test sokak no: 1',
+    ]);
+
+    $address = CustomerAddress::where('customer_id', $customer->id)->first();
     $order = Order::latest()->first();
-    expect($order->customer_address_id)->toBeNull();
+    expect($order->customer_address_id)->toBe($address->id);
 });

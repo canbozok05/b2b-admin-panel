@@ -81,6 +81,9 @@ class OrderController extends Controller
             'items.*.quantity' => 'required|integer|min:1|max:1000000',
         ]);
 
+        $customer = Customer::findOrFail((int) $validated['customer_id']);
+        $newAddress = $this->validateNewCustomerAddress($request, $customer);
+
         foreach ($validated['items'] as $item) {
             $product = Product::findOrFail((int) $item['product_id']);
 
@@ -91,10 +94,14 @@ class OrderController extends Controller
             }
         }
 
-        DB::transaction(function () use ($validated) {
+        DB::transaction(function () use ($validated, $customer, $newAddress) {
             do {
                 $orderNumber = 'ORD-'.random_int(100000, 999999);
             } while (Order::where('order_number', $orderNumber)->exists());
+
+            $customerAddressId = $newAddress
+                ? $customer->addresses()->create($newAddress)->id
+                : $validated['customer_address_id'] ?? null;
 
             $totalAmount = 0;
             foreach ($validated['items'] as $item) {
@@ -104,7 +111,7 @@ class OrderController extends Controller
 
             $order = Order::create([
                 'customer_id' => $validated['customer_id'],
-                'customer_address_id' => $validated['customer_address_id'] ?? null,
+                'customer_address_id' => $customerAddressId,
                 'order_number' => $orderNumber,
                 'total_amount' => $totalAmount,
                 'status' => 'pending',
@@ -124,6 +131,28 @@ class OrderController extends Controller
         });
 
         return redirect()->route('orders.index');
+    }
+
+    /**
+     * Müşterinin kayıtlı adresi yoksa, siparişle birlikte girilen yeni adresi doğrular.
+     *
+     * @return array{label: string, address: string}|null
+     */
+    private function validateNewCustomerAddress(Request $request, Customer $customer): ?array
+    {
+        if ($customer->addresses()->exists()) {
+            return null;
+        }
+
+        $validated = $request->validate([
+            'new_address_label' => 'required|string|max:100',
+            'new_address_text' => 'required|string|max:500',
+        ]);
+
+        return [
+            'label' => $validated['new_address_label'],
+            'address' => $validated['new_address_text'],
+        ];
     }
 
     public function edit(int $id): Response
@@ -154,11 +183,18 @@ class OrderController extends Controller
             'items.*.quantity' => 'required|integer|min:1|max:1000000',
         ]);
 
-        DB::transaction(function () use ($order, $validated) {
+        $customer = Customer::findOrFail((int) $validated['customer_id']);
+        $newAddress = $this->validateNewCustomerAddress($request, $customer);
+
+        DB::transaction(function () use ($order, $validated, $customer, $newAddress) {
             foreach ($order->orderItems as $oldItem) {
                 Product::where('id', $oldItem->product_id)->increment('stock_quantity', $oldItem->quantity);
             }
             $order->orderItems()->delete();
+
+            $customerAddressId = $newAddress
+                ? $customer->addresses()->create($newAddress)->id
+                : $validated['customer_address_id'] ?? null;
 
             $totalAmount = 0;
             foreach ($validated['items'] as $item) {
@@ -168,7 +204,7 @@ class OrderController extends Controller
 
             $order->update([
                 'customer_id' => $validated['customer_id'],
-                'customer_address_id' => $validated['customer_address_id'] ?? null,
+                'customer_address_id' => $customerAddressId,
                 'total_amount' => $totalAmount,
             ]);
 
