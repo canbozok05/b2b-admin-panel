@@ -11,6 +11,7 @@ type ProductImage = {
 type Category = {
     id: number;
     name: string;
+    critical_stock_threshold: number;
 };
 
 type Product = {
@@ -65,6 +66,10 @@ export default function ProductEdit({ product, categories }: Props) {
         e.preventDefault();
         put(products.update.url(product.id));
     }
+
+    const selectedCategory = categories.find(
+        (category) => String(category.id) === data.category_id,
+    );
 
     return (
         <>
@@ -160,6 +165,12 @@ export default function ProductEdit({ product, categories }: Props) {
                     <div>
                         <label className="text-sm font-medium">
                             Stok Miktarı
+                            {selectedCategory && (
+                                <span className="ml-1 font-normal text-muted-foreground">
+                                    (kritik stok eşiği:{' '}
+                                    {selectedCategory.critical_stock_threshold})
+                                </span>
+                            )}
                         </label>
                         <input
                             type="number"
