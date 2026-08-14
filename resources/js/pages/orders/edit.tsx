@@ -44,6 +44,7 @@ type Order = {
     customer_id: number;
     customer_address_id: number | null;
     discount_code: { code: string } | null;
+    discount_amount: string;
     order_items: OrderItem[];
 };
 
@@ -60,10 +61,33 @@ type ItemRow = {
 
 type AddressMode = 'existing' | 'new';
 
+type DiscountCheckResult = {
+    valid: boolean;
+    message: string | null;
+    discount_amount: number;
+};
+
+function getXsrfToken(): string {
+    const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+
+    return match ? decodeURIComponent(match[1]) : '';
+}
+
 export default function OrderEdit({ order, customers, products }: Props) {
     const [addressMode, setAddressMode] = useState<AddressMode>(
         order.customer_address_id ? 'existing' : 'new',
     );
+    const [discountResult, setDiscountResult] =
+        useState<DiscountCheckResult | null>(
+            order.discount_code
+                ? {
+                      valid: true,
+                      message: null,
+                      discount_amount: Number(order.discount_amount),
+                  }
+                : null,
+        );
+    const [checkingDiscount, setCheckingDiscount] = useState(false);
 
     const { data, setData, put, processing, errors } = useForm({
         customer_id: String(order.customer_id),
@@ -112,10 +136,12 @@ export default function OrderEdit({ order, customers, products }: Props) {
             i === index ? { ...item, [field]: value } : item,
         );
         setData('items', next);
+        setDiscountResult(null);
     }
 
     function addItem() {
         setData('items', [...data.items, { product_id: '', quantity: '1' }]);
+        setDiscountResult(null);
     }
 
     function removeItem(index: number) {
@@ -123,6 +149,53 @@ export default function OrderEdit({ order, customers, products }: Props) {
             'items',
             data.items.filter((_, i) => i !== index),
         );
+        setDiscountResult(null);
+    }
+
+    function handleDiscountCodeChange(value: string) {
+        setData('discount_code', value.toUpperCase());
+        setDiscountResult(null);
+    }
+
+    async function handleCheckDiscountCode() {
+        setCheckingDiscount(true);
+
+        try {
+            const response = await fetch(orders.checkDiscountCode.url(), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-XSRF-TOKEN': getXsrfToken(),
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    discount_code: data.discount_code,
+                    items: data.items,
+                }),
+            });
+
+            if (!response.ok) {
+                setDiscountResult({
+                    valid: false,
+                    message: 'Kod kontrol edilemedi.',
+                    discount_amount: 0,
+                });
+
+                return;
+            }
+
+            const json = (await response.json()) as DiscountCheckResult;
+            setDiscountResult(json);
+        } catch {
+            setDiscountResult({
+                valid: false,
+                message: 'Kod kontrol edilirken bir hata oluştu.',
+                discount_amount: 0,
+            });
+        } finally {
+            setCheckingDiscount(false);
+        }
     }
 
     function findProduct(productId: string): Product | undefined {
@@ -440,19 +513,39 @@ export default function OrderEdit({ order, customers, products }: Props) {
                         <label className="text-sm font-medium">
                             İndirim Kodu
                         </label>
-                        <input
-                            type="text"
-                            value={data.discount_code}
-                            onChange={(e) =>
-                                setData(
-                                    'discount_code',
-                                    e.target.value.toUpperCase(),
-                                )
-                            }
-                            placeholder="örn. YAZ2026"
-                            maxLength={50}
-                            className="w-full max-w-xs rounded-md border p-2 uppercase"
-                        />
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={data.discount_code}
+                                onChange={(e) =>
+                                    handleDiscountCodeChange(e.target.value)
+                                }
+                                placeholder="örn. YAZ2026"
+                                maxLength={50}
+                                className="w-full max-w-xs rounded-md border p-2 uppercase"
+                            />
+                            <button
+                                type="button"
+                                onClick={handleCheckDiscountCode}
+                                disabled={
+                                    !data.discount_code || checkingDiscount
+                                }
+                                className="rounded-md border px-3 py-2 text-sm disabled:opacity-40"
+                            >
+                                {checkingDiscount
+                                    ? 'Kontrol Ediliyor...'
+                                    : 'Kodu Doğrula'}
+                            </button>
+                        </div>
+                        {discountResult && (
+                            <p
+                                className={`mt-1 text-sm ${discountResult.valid ? 'text-green-600' : 'text-destructive'}`}
+                            >
+                                {discountResult.valid
+                                    ? `Kod geçerli! ${formatTl(discountResult.discount_amount)} ₺ indirim uygulanacak.`
+                                    : discountResult.message}
+                            </p>
+                        )}
                         {errors.discount_code && (
                             <p className="text-sm text-destructive">
                                 {errors.discount_code}
@@ -464,12 +557,36 @@ export default function OrderEdit({ order, customers, products }: Props) {
                         <p className="text-muted-foreground">
                             Toplam KDV: {formatTl(totalVat)} ₺
                         </p>
+                        {discountResult?.valid &&
+                            discountResult.discount_amount > 0 && (
+                                <>
+                                    <p className="text-muted-foreground">
+                                        Ara Toplam: {formatTl(total)} ₺
+                                    </p>
+                                    <p className="text-green-600">
+                                        İndirim: -
+                                        {formatTl(
+                                            discountResult.discount_amount,
+                                        )}{' '}
+                                        ₺
+                                    </p>
+                                </>
+                            )}
                         <p className="text-lg font-semibold">
-                            Toplam: {formatTl(total)} ₺
+                            Toplam:{' '}
+                            {formatTl(
+                                discountResult?.valid
+                                    ? total - discountResult.discount_amount
+                                    : total,
+                            )}{' '}
+                            ₺
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                            İndirim kodu geçerliyse nihai tutardan düşülecektir.
-                        </p>
+                        {!discountResult && (
+                            <p className="text-xs text-muted-foreground">
+                                İndirim kodu geçerliyse nihai tutardan
+                                düşülecektir.
+                            </p>
+                        )}
                     </div>
 
                     <button

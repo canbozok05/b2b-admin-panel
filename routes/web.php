@@ -82,6 +82,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('orders/create', [OrderController::class, 'create'])->name('orders.create');
         Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
+        Route::post('orders/check-discount-code', [OrderController::class, 'checkDiscountCode'])->name('orders.checkDiscountCode');
         Route::get('orders/{id}/edit', [OrderController::class, 'edit'])->name('orders.edit');
         Route::put('orders/{id}', [OrderController::class, 'update'])->name('orders.update');
         Route::delete('orders/{id}', [OrderController::class, 'destroy'])->name('orders.destroy');

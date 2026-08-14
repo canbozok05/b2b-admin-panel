@@ -438,3 +438,51 @@ test('a discount code below the minimum order amount is rejected', function () {
     $response->assertSessionHasErrors('discount_code');
     $this->assertDatabaseCount('orders', 0);
 });
+
+test('checking a valid discount code returns the discount amount without creating an order', function () {
+    actingAsSuperAdmin();
+
+    $product = Product::factory()->create(['price' => 1000]);
+
+    $discountCode = DiscountCode::factory()->create([
+        'discount_type' => 'percentage',
+        'discount_value' => 20,
+        'product_id' => $product->id,
+        'category_id' => null,
+    ]);
+
+    $response = $this->postJson(route('orders.checkDiscountCode'), [
+        'discount_code' => $discountCode->code,
+        'items' => [
+            ['product_id' => $product->id, 'quantity' => 2],
+        ],
+    ]);
+
+    $response->assertOk();
+    $response->assertJson([
+        'valid' => true,
+        'message' => null,
+        'discount_amount' => 400.0,
+    ]);
+    $this->assertDatabaseCount('orders', 0);
+});
+
+test('checking an invalid discount code returns an explanatory message', function () {
+    actingAsSuperAdmin();
+
+    $product = Product::factory()->create(['price' => 1000]);
+
+    $response = $this->postJson(route('orders.checkDiscountCode'), [
+        'discount_code' => 'YOKBOYLEBIRKOD',
+        'items' => [
+            ['product_id' => $product->id, 'quantity' => 1],
+        ],
+    ]);
+
+    $response->assertOk();
+    $response->assertJson([
+        'valid' => false,
+        'message' => 'Geçersiz indirim kodu.',
+        'discount_amount' => 0,
+    ]);
+});

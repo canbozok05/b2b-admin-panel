@@ -8,6 +8,7 @@ use App\Models\DiscountCode;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -134,9 +135,44 @@ class OrderController extends Controller
     }
 
     /**
-     * Verilen indirim kodunu doğrular: kod var mı, sipariş kalemlerindeki
+     * Verilen indirim kodunu değerlendirir: kod var mı, sipariş kalemlerindeki
      * ürünlerden biri kodun kapsamına giriyor mu, sipariş tutarı asgari
-     * tutarı karşılıyor mu. Kod girilmemişse indirim uygulanmaz.
+     * tutarı karşılıyor mu. Kod girilmemişse indirim uygulanmaz sayılır.
+     *
+     * @param  list<Product>  $products
+     * @return array{valid: bool, id: int|null, discount_amount: float, message: string|null}
+     */
+    private function evaluateDiscountCode(string $code, array $products, float $rawTotal): array
+    {
+        if ($code === '') {
+            return ['valid' => true, 'id' => null, 'discount_amount' => 0.0, 'message' => null];
+        }
+
+        $discountCode = DiscountCode::where('code', $code)->first();
+
+        if (! $discountCode) {
+            return ['valid' => false, 'id' => null, 'discount_amount' => 0.0, 'message' => 'Geçersiz indirim kodu.'];
+        }
+
+        if (! $discountCode->appliesToProducts($products)) {
+            return ['valid' => false, 'id' => null, 'discount_amount' => 0.0, 'message' => 'Bu indirim kodu sepetinizdeki ürünler için geçerli değil.'];
+        }
+
+        if ($discountCode->min_order_amount && $rawTotal < $discountCode->min_order_amount) {
+            return ['valid' => false, 'id' => null, 'discount_amount' => 0.0, 'message' => "Bu kod için sipariş tutarı en az {$discountCode->min_order_amount} ₺ olmalı."];
+        }
+
+        return [
+            'valid' => true,
+            'id' => $discountCode->id,
+            'discount_amount' => $discountCode->discountAmountFor($rawTotal),
+            'message' => null,
+        ];
+    }
+
+    /**
+     * evaluateDiscountCode sonucunu sipariş kaydı için kullanılabilir hale getirir;
+     * kod geçersizse doğrudan doğrulama hatası fırlatır.
      *
      * @param  list<Product>  $products
      * @return array{0: int|null, 1: float}
@@ -144,32 +180,46 @@ class OrderController extends Controller
     private function resolveDiscountCode(Request $request, array $products, float $rawTotal): array
     {
         $code = trim((string) $request->input('discount_code'));
+        $result = $this->evaluateDiscountCode($code, $products, $rawTotal);
 
-        if ($code === '') {
-            return [null, 0.0];
-        }
-
-        $discountCode = DiscountCode::where('code', $code)->first();
-
-        if (! $discountCode) {
+        if (! $result['valid']) {
             throw ValidationException::withMessages([
-                'discount_code' => 'Geçersiz indirim kodu.',
+                'discount_code' => $result['message'],
             ]);
         }
 
-        if (! $discountCode->appliesToProducts($products)) {
-            throw ValidationException::withMessages([
-                'discount_code' => 'Bu indirim kodu sepetinizdeki ürünler için geçerli değil.',
-            ]);
+        return [$result['id'], $result['discount_amount']];
+    }
+
+    /**
+     * Sipariş formundan, kaydetmeden önce bir indirim kodunun geçerli olup
+     * olmadığını ve ne kadar indirim sağlayacağını sormak için kullanılır.
+     */
+    public function checkDiscountCode(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'discount_code' => 'required|string|max:50',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+        ]);
+
+        $products = [];
+        $rawTotal = 0;
+
+        foreach ($validated['items'] as $item) {
+            $product = Product::findOrFail((int) $item['product_id']);
+            $products[] = $product;
+            $rawTotal += $product->discountedPrice() * $item['quantity'];
         }
 
-        if ($discountCode->min_order_amount && $rawTotal < $discountCode->min_order_amount) {
-            throw ValidationException::withMessages([
-                'discount_code' => "Bu kod için sipariş tutarı en az {$discountCode->min_order_amount} ₺ olmalı.",
-            ]);
-        }
+        $result = $this->evaluateDiscountCode(trim($validated['discount_code']), $products, $rawTotal);
 
-        return [$discountCode->id, $discountCode->discountAmountFor($rawTotal)];
+        return response()->json([
+            'valid' => $result['valid'],
+            'message' => $result['message'],
+            'discount_amount' => $result['discount_amount'],
+        ]);
     }
 
     /**
