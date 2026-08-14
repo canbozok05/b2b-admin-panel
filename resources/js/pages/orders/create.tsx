@@ -54,6 +54,7 @@ export default function OrderCreate({ customers, products }: Props) {
         address_mode: 'existing' as AddressMode,
         new_address_label: '',
         new_address_text: '',
+        discount_code: '',
         items: [{ product_id: '', quantity: '1' }] as ItemRow[],
     });
 
@@ -412,12 +413,39 @@ export default function OrderCreate({ customers, products }: Props) {
                         )}
                     </div>
 
+                    <div>
+                        <label className="text-sm font-medium">
+                            İndirim Kodu
+                        </label>
+                        <input
+                            type="text"
+                            value={data.discount_code}
+                            onChange={(e) =>
+                                setData(
+                                    'discount_code',
+                                    e.target.value.toUpperCase(),
+                                )
+                            }
+                            placeholder="örn. YAZ2026"
+                            maxLength={50}
+                            className="w-full max-w-xs rounded-md border p-2 uppercase"
+                        />
+                        {errors.discount_code && (
+                            <p className="text-sm text-destructive">
+                                {errors.discount_code}
+                            </p>
+                        )}
+                    </div>
+
                     <div className="flex flex-col items-end gap-1 text-sm">
                         <p className="text-muted-foreground">
                             Toplam KDV: {formatTl(totalVat)} ₺
                         </p>
                         <p className="text-lg font-semibold">
                             Toplam: {formatTl(total)} ₺
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                            İndirim kodu geçerliyse nihai tutardan düşülecektir.
                         </p>
                     </div>
 

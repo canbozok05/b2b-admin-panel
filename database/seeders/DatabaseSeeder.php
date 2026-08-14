@@ -6,6 +6,7 @@ use App\Models\Campaign;
 use App\Models\Category;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
+use App\Models\DiscountCode;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -121,6 +122,7 @@ class DatabaseSeeder extends Seeder
         $leafCategories = $this->seedCategories();
         $this->seedProducts($leafCategories);
         $this->seedCampaigns($leafCategories);
+        $this->seedDiscountCodes($leafCategories);
 
         $customers = Customer::factory()->count(10)->create();
         $this->seedCustomerAddresses($customers);
@@ -216,6 +218,33 @@ class DatabaseSeeder extends Seeder
                 'starts_at' => now()->subDay(),
                 'ends_at' => now()->addDays(10),
                 'category_id' => $leafCategories['Buzdolabı']->id,
+            ]);
+        }
+    }
+
+    /**
+     * @param  array<string, Category>  $leafCategories
+     */
+    private function seedDiscountCodes(array $leafCategories): void
+    {
+        $laptop = Product::where('name', 'Asus VivoBook 15 Dizüstü Bilgisayar')->first();
+
+        if ($laptop) {
+            DiscountCode::create([
+                'code' => 'BILGISAYAR10',
+                'discount_type' => 'percentage',
+                'discount_value' => 10,
+                'product_id' => $laptop->id,
+            ]);
+        }
+
+        if (isset($leafCategories['Koltuk Takımı'])) {
+            DiscountCode::create([
+                'code' => 'MOBILYA500',
+                'discount_type' => 'fixed',
+                'discount_value' => 500,
+                'min_order_amount' => 10000,
+                'category_id' => $leafCategories['Koltuk Takımı']->id,
             ]);
         }
     }

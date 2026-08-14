@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\OrderStatusUpdated;
 use App\Models\Customer;
+use App\Models\DiscountCode;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Collection;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -31,7 +33,7 @@ class OrderController extends Controller
 
     public function show(int $id): Response
     {
-        $order = Order::with('customer', 'customerAddress', 'orderItems.product.category')->findOrFail($id);
+        $order = Order::with('customer', 'customerAddress', 'discountCode', 'orderItems.product.category')->findOrFail($id);
 
         return Inertia::render('orders/show', [
             'order' => $order,
@@ -78,6 +80,9 @@ class OrderController extends Controller
         $customer = Customer::findOrFail((int) $validated['customer_id']);
         [$existingAddressId, $newAddress] = $this->resolveOrderAddress($request, $customer);
 
+        $products = [];
+        $rawTotal = 0;
+
         foreach ($validated['items'] as $item) {
             $product = Product::findOrFail((int) $item['product_id']);
 
@@ -86,9 +91,14 @@ class OrderController extends Controller
                     'items' => "\"{$product->name}\" için yeterli stok yok (mevcut: {$product->stock_quantity}).",
                 ]);
             }
+
+            $products[] = $product;
+            $rawTotal += $product->discountedPrice() * $item['quantity'];
         }
 
-        DB::transaction(function () use ($validated, $customer, $existingAddressId, $newAddress) {
+        [$discountCodeId, $discountAmount] = $this->resolveDiscountCode($request, $products, $rawTotal);
+
+        DB::transaction(function () use ($validated, $customer, $existingAddressId, $newAddress, $rawTotal, $discountCodeId, $discountAmount) {
             do {
                 $orderNumber = 'ORD-'.random_int(100000, 999999);
             } while (Order::where('order_number', $orderNumber)->exists());
@@ -97,17 +107,13 @@ class OrderController extends Controller
                 ? $customer->addresses()->create($newAddress)->id
                 : $existingAddressId;
 
-            $totalAmount = 0;
-            foreach ($validated['items'] as $item) {
-                $product = Product::findOrFail((int) $item['product_id']);
-                $totalAmount += $product->discountedPrice() * $item['quantity'];
-            }
-
             $order = Order::create([
                 'customer_id' => $validated['customer_id'],
                 'customer_address_id' => $customerAddressId,
                 'order_number' => $orderNumber,
-                'total_amount' => $totalAmount,
+                'total_amount' => $rawTotal - $discountAmount,
+                'discount_code_id' => $discountCodeId,
+                'discount_amount' => $discountAmount,
                 'status' => 'pending',
             ]);
 
@@ -125,6 +131,45 @@ class OrderController extends Controller
         });
 
         return redirect()->route('orders.index');
+    }
+
+    /**
+     * Verilen indirim kodunu doğrular: kod var mı, sipariş kalemlerindeki
+     * ürünlerden biri kodun kapsamına giriyor mu, sipariş tutarı asgari
+     * tutarı karşılıyor mu. Kod girilmemişse indirim uygulanmaz.
+     *
+     * @param  list<Product>  $products
+     * @return array{0: int|null, 1: float}
+     */
+    private function resolveDiscountCode(Request $request, array $products, float $rawTotal): array
+    {
+        $code = trim((string) $request->input('discount_code'));
+
+        if ($code === '') {
+            return [null, 0.0];
+        }
+
+        $discountCode = DiscountCode::where('code', $code)->first();
+
+        if (! $discountCode) {
+            throw ValidationException::withMessages([
+                'discount_code' => 'Geçersiz indirim kodu.',
+            ]);
+        }
+
+        if (! $discountCode->appliesToProducts($products)) {
+            throw ValidationException::withMessages([
+                'discount_code' => 'Bu indirim kodu sepetinizdeki ürünler için geçerli değil.',
+            ]);
+        }
+
+        if ($discountCode->min_order_amount && $rawTotal < $discountCode->min_order_amount) {
+            throw ValidationException::withMessages([
+                'discount_code' => "Bu kod için sipariş tutarı en az {$discountCode->min_order_amount} ₺ olmalı.",
+            ]);
+        }
+
+        return [$discountCode->id, $discountCode->discountAmountFor($rawTotal)];
     }
 
     /**
@@ -165,7 +210,7 @@ class OrderController extends Controller
 
     public function edit(int $id): Response
     {
-        $order = Order::with('orderItems.product', 'customer')->findOrFail($id);
+        $order = Order::with('orderItems.product', 'customer', 'discountCode')->findOrFail($id);
 
         return Inertia::render('orders/edit', [
             'order' => $order,
@@ -188,7 +233,18 @@ class OrderController extends Controller
         $customer = Customer::findOrFail((int) $validated['customer_id']);
         [$existingAddressId, $newAddress] = $this->resolveOrderAddress($request, $customer);
 
-        DB::transaction(function () use ($order, $validated, $customer, $existingAddressId, $newAddress) {
+        $products = [];
+        $rawTotal = 0;
+
+        foreach ($validated['items'] as $item) {
+            $product = Product::findOrFail((int) $item['product_id']);
+            $products[] = $product;
+            $rawTotal += $product->discountedPrice() * $item['quantity'];
+        }
+
+        [$discountCodeId, $discountAmount] = $this->resolveDiscountCode($request, $products, $rawTotal);
+
+        DB::transaction(function () use ($order, $validated, $customer, $existingAddressId, $newAddress, $rawTotal, $discountCodeId, $discountAmount) {
             foreach ($order->orderItems as $oldItem) {
                 Product::where('id', $oldItem->product_id)->increment('stock_quantity', $oldItem->quantity);
             }
@@ -198,16 +254,12 @@ class OrderController extends Controller
                 ? $customer->addresses()->create($newAddress)->id
                 : $existingAddressId;
 
-            $totalAmount = 0;
-            foreach ($validated['items'] as $item) {
-                $product = Product::findOrFail((int) $item['product_id']);
-                $totalAmount += $product->discountedPrice() * $item['quantity'];
-            }
-
             $order->update([
                 'customer_id' => $validated['customer_id'],
                 'customer_address_id' => $customerAddressId,
-                'total_amount' => $totalAmount,
+                'total_amount' => $rawTotal - $discountAmount,
+                'discount_code_id' => $discountCodeId,
+                'discount_amount' => $discountAmount,
             ]);
 
             foreach ($validated['items'] as $item) {

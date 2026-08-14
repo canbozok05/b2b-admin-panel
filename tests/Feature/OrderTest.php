@@ -3,6 +3,7 @@
 use App\Mail\OrderStatusUpdated;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
+use App\Models\DiscountCode;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Support\Facades\Mail;
@@ -333,4 +334,107 @@ test('a customer with registered addresses can still enter a new one for the ord
     $order = Order::latest()->first();
     expect($order->customer_address_id)->toBe($newAddress->id);
     expect($customer->addresses()->count())->toBe(2);
+});
+
+test('a valid discount code reduces the order total', function () {
+    actingAsSuperAdmin();
+
+    $customer = Customer::factory()->create();
+    $address = CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
+    $product = Product::factory()->create(['stock_quantity' => 10, 'price' => 1000]);
+
+    $discountCode = DiscountCode::factory()->create([
+        'discount_type' => 'percentage',
+        'discount_value' => 20,
+        'product_id' => $product->id,
+        'category_id' => null,
+    ]);
+
+    $response = $this->post(route('orders.store'), [
+        'customer_id' => $customer->id,
+        'customer_address_id' => $address->id,
+        'discount_code' => $discountCode->code,
+        'items' => [
+            ['product_id' => $product->id, 'quantity' => 2],
+        ],
+    ]);
+
+    $response->assertRedirect(route('orders.index'));
+
+    $order = Order::latest()->first();
+    expect((float) $order->total_amount)->toBe(1600.0);
+    expect((float) $order->discount_amount)->toBe(400.0);
+    expect($order->discount_code_id)->toBe($discountCode->id);
+});
+
+test('an invalid discount code is rejected', function () {
+    actingAsSuperAdmin();
+
+    $customer = Customer::factory()->create();
+    $address = CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
+    $product = Product::factory()->create(['stock_quantity' => 10, 'price' => 1000]);
+
+    $response = $this->post(route('orders.store'), [
+        'customer_id' => $customer->id,
+        'customer_address_id' => $address->id,
+        'discount_code' => 'YOKBOYLEBIRKOD',
+        'items' => [
+            ['product_id' => $product->id, 'quantity' => 1],
+        ],
+    ]);
+
+    $response->assertSessionHasErrors('discount_code');
+    $this->assertDatabaseCount('orders', 0);
+});
+
+test('a discount code that does not match any item in the order is rejected', function () {
+    actingAsSuperAdmin();
+
+    $customer = Customer::factory()->create();
+    $address = CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
+    $product = Product::factory()->create(['stock_quantity' => 10, 'price' => 1000]);
+    $otherProduct = Product::factory()->create();
+
+    $discountCode = DiscountCode::factory()->create([
+        'product_id' => $otherProduct->id,
+        'category_id' => null,
+    ]);
+
+    $response = $this->post(route('orders.store'), [
+        'customer_id' => $customer->id,
+        'customer_address_id' => $address->id,
+        'discount_code' => $discountCode->code,
+        'items' => [
+            ['product_id' => $product->id, 'quantity' => 1],
+        ],
+    ]);
+
+    $response->assertSessionHasErrors('discount_code');
+    $this->assertDatabaseCount('orders', 0);
+});
+
+test('a discount code below the minimum order amount is rejected', function () {
+    actingAsSuperAdmin();
+
+    $customer = Customer::factory()->create();
+    $address = CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
+    $product = Product::factory()->create(['stock_quantity' => 10, 'price' => 100]);
+
+    $discountCode = DiscountCode::factory()->create([
+        'product_id' => $product->id,
+        'category_id' => null,
+        'min_order_amount' => 500,
+    ]);
+
+    $response = $this->post(route('orders.store'), [
+        'customer_id' => $customer->id,
+        'customer_address_id' => $address->id,
+        'discount_code' => $discountCode->code,
+        'items' => [
+            ['product_id' => $product->id, 'quantity' => 1],
+        ],
+    ]);
+
+    $response->assertSessionHasErrors('discount_code');
+    $this->assertDatabaseCount('orders', 0);
 });

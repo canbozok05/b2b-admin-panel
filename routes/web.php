@@ -5,6 +5,7 @@ use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerAddressController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\DiscountCodeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Models\Customer;
@@ -58,6 +59,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('campaigns/{id}/edit', [CampaignController::class, 'edit'])->name('campaigns.edit');
         Route::put('campaigns/{id}', [CampaignController::class, 'update'])->name('campaigns.update');
         Route::delete('campaigns/{id}', [CampaignController::class, 'destroy'])->name('campaigns.destroy');
+
+        Route::get('discount-codes', [DiscountCodeController::class, 'index'])->name('discount-codes.index');
+        Route::get('discount-codes/create', [DiscountCodeController::class, 'create'])->name('discount-codes.create');
+        Route::post('discount-codes', [DiscountCodeController::class, 'store'])->name('discount-codes.store');
+        Route::get('discount-codes/{id}/edit', [DiscountCodeController::class, 'edit'])->name('discount-codes.edit');
+        Route::put('discount-codes/{id}', [DiscountCodeController::class, 'update'])->name('discount-codes.update');
+        Route::delete('discount-codes/{id}', [DiscountCodeController::class, 'destroy'])->name('discount-codes.destroy');
 
         Route::delete('products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
 

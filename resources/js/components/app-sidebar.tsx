@@ -7,6 +7,7 @@ import {
     Tags,
     Package,
     ShoppingCart,
+    Ticket,
     Users,
     Contact,
 } from 'lucide-react';
@@ -28,6 +29,7 @@ import admins from '@/routes/admins';
 import campaigns from '@/routes/campaigns';
 import categories from '@/routes/categories';
 import customers from '@/routes/customers';
+import discountCodes from '@/routes/discount-codes';
 import orders from '@/routes/orders';
 import products from '@/routes/products';
 import type { NavItem } from '@/types';
@@ -68,6 +70,12 @@ const allNavItems: NavItemWithRoles[] = [
         title: 'Kampanyalar',
         href: campaigns.index(),
         icon: BadgePercent,
+        roles: ['Süper Admin'],
+    },
+    {
+        title: 'İndirim Kodları',
+        href: discountCodes.index(),
+        icon: Ticket,
         roles: ['Süper Admin'],
     },
     {

@@ -43,6 +43,7 @@ type Order = {
     id: number;
     customer_id: number;
     customer_address_id: number | null;
+    discount_code: { code: string } | null;
     order_items: OrderItem[];
 };
 
@@ -74,6 +75,7 @@ export default function OrderEdit({ order, customers, products }: Props) {
             : 'new') as AddressMode,
         new_address_label: '',
         new_address_text: '',
+        discount_code: order.discount_code?.code ?? '',
         items: order.order_items.map((item): ItemRow => ({
             product_id: String(item.product_id),
             quantity: String(item.quantity),
@@ -434,12 +436,39 @@ export default function OrderEdit({ order, customers, products }: Props) {
                         )}
                     </div>
 
+                    <div>
+                        <label className="text-sm font-medium">
+                            İndirim Kodu
+                        </label>
+                        <input
+                            type="text"
+                            value={data.discount_code}
+                            onChange={(e) =>
+                                setData(
+                                    'discount_code',
+                                    e.target.value.toUpperCase(),
+                                )
+                            }
+                            placeholder="örn. YAZ2026"
+                            maxLength={50}
+                            className="w-full max-w-xs rounded-md border p-2 uppercase"
+                        />
+                        {errors.discount_code && (
+                            <p className="text-sm text-destructive">
+                                {errors.discount_code}
+                            </p>
+                        )}
+                    </div>
+
                     <div className="flex flex-col items-end gap-1 text-sm">
                         <p className="text-muted-foreground">
                             Toplam KDV: {formatTl(totalVat)} ₺
                         </p>
                         <p className="text-lg font-semibold">
                             Toplam: {formatTl(total)} ₺
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                            İndirim kodu geçerliyse nihai tutardan düşülecektir.
                         </p>
                     </div>
 

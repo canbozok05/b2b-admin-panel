@@ -17,6 +17,8 @@ type Order = {
     id: number;
     order_number: string;
     total_amount: string;
+    discount_amount: string;
+    discount_code: { code: string } | null;
     status: string;
     customer: {
         id: number;
@@ -199,6 +201,26 @@ export default function OrderShow({ order }: Props) {
                         <p className="text-sm text-muted-foreground">
                             Toplam KDV: {formatTl(totalVat)} ₺
                         </p>
+                        {Number(order.discount_amount) > 0 && (
+                            <>
+                                <p className="text-sm text-muted-foreground">
+                                    Ara Toplam:{' '}
+                                    {formatTl(
+                                        Number(order.total_amount) +
+                                            Number(order.discount_amount),
+                                    )}{' '}
+                                    ₺
+                                </p>
+                                <p className="text-sm text-green-600">
+                                    İndirim Kodu
+                                    {order.discount_code
+                                        ? ` (${order.discount_code.code})`
+                                        : ''}
+                                    : -{formatTl(Number(order.discount_amount))}{' '}
+                                    ₺
+                                </p>
+                            </>
+                        )}
                         <p className="text-lg font-semibold">
                             Toplam: {formatTl(Number(order.total_amount))} ₺
                         </p>

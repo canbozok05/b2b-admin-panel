@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['customer_id', 'customer_address_id', 'order_number', 'total_amount', 'status'])]
+#[Fillable(['customer_id', 'customer_address_id', 'order_number', 'total_amount', 'status', 'discount_code_id', 'discount_amount'])]
 class Order extends Model
 {
     /** @use HasFactory<OrderFactory> */
@@ -29,6 +29,14 @@ class Order extends Model
     public function customerAddress(): BelongsTo
     {
         return $this->belongsTo(CustomerAddress::class);
+    }
+
+    /**
+     * @return BelongsTo<DiscountCode, $this>
+     */
+    public function discountCode(): BelongsTo
+    {
+        return $this->belongsTo(DiscountCode::class);
     }
 
     /**
