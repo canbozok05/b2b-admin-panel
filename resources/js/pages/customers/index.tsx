@@ -96,7 +96,14 @@ export default function CustomerIndex({
                         )}
                         {allCustomers.map((customer) => (
                             <tr key={customer.id} className="border-b">
-                                <td className="p-2">{customer.name}</td>
+                                <td className="p-2">
+                                    <Link
+                                        href={customers.show.url(customer.id)}
+                                        className="text-primary underline"
+                                    >
+                                        {customer.name}
+                                    </Link>
+                                </td>
                                 <td className="p-2">{customer.email}</td>
                                 <td className="p-2">{customer.phone ?? '—'}</td>
                                 <td className="p-2">

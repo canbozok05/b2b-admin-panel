@@ -80,6 +80,16 @@ class CustomerController extends Controller
         ]);
     }
 
+    public function show(int $id): Response
+    {
+        $customer = Customer::with('addresses')->findOrFail($id);
+
+        return Inertia::render('customers/show', [
+            'customer' => $customer,
+            'orders' => $customer->orders()->with('customerAddress')->latest()->get(),
+        ]);
+    }
+
     public function create(): Response
     {
         return Inertia::render('customers/create');

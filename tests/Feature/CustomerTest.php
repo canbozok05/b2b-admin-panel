@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\Customer;
+use App\Models\CustomerAddress;
+use App\Models\Order;
 
 test('süper admin can create a customer with a required first address', function () {
     actingAsSuperAdmin();
@@ -131,5 +133,37 @@ test('customers can be filtered by status', function () {
     $response->assertInertia(fn ($page) => $page
         ->has('customers', 1)
         ->where('customers.0.status', 'inactive')
+    );
+});
+
+test('depo görevlisi cannot view a customer detail page', function () {
+    actingAsDepoGorevlisi();
+
+    $customer = Customer::factory()->create();
+
+    $response = $this->get(route('customers.show', $customer->id));
+
+    $response->assertForbidden();
+});
+
+test('süper admin can view a customer detail page with their order history', function () {
+    actingAsSuperAdmin();
+
+    $customer = Customer::factory()->create();
+    CustomerAddress::create(['customer_id' => $customer->id, 'label' => 'Ev', 'address' => 'Test adresi']);
+
+    Order::factory()->create([
+        'customer_id' => $customer->id,
+        'order_number' => 'ORD-999999',
+        'status' => 'completed',
+    ]);
+
+    $response = $this->get(route('customers.show', $customer->id));
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->where('customer.id', $customer->id)
+        ->has('orders', 1)
+        ->where('orders.0.order_number', 'ORD-999999')
     );
 });

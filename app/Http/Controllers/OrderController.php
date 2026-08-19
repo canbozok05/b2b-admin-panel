@@ -20,15 +20,64 @@ use Inertia\Response;
 
 class OrderController extends Controller
 {
-    public function index(): Response
+    /**
+     * Türkçe küçük harfe çevirme kuralları: İ->i, I->ı, Ç->ç, Ğ->ğ, Ö->ö, Ş->ş, Ü->ü.
+     *
+     * @var array<string, string>
+     */
+    private const TURKISH_LOWER_MAP = [
+        'İ' => 'i',
+        'I' => 'ı',
+        'Ç' => 'ç',
+        'Ğ' => 'ğ',
+        'Ö' => 'ö',
+        'Ş' => 'ş',
+        'Ü' => 'ü',
+    ];
+
+    /**
+     * Türkçe büyük/küçük harf kurallarına göre küçük harfe çevirir (ör. "İZMİR" -> "izmir").
+     */
+    private function turkishLower(string $value): string
     {
-        $orders = Order::with('customer')
-            ->orderByRaw("status = 'pending' desc")
+        return mb_strtolower(strtr($value, self::TURKISH_LOWER_MAP));
+    }
+
+    public function index(Request $request): Response
+    {
+        $search = trim((string) $request->query('search', ''));
+        $status = (string) $request->query('status', '');
+
+        $query = Order::with('customer');
+
+        if ($search !== '') {
+            $needle = '%'.$this->turkishLower($search).'%';
+
+            $query->where(function ($q) use ($search, $needle) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhereHas('customer', function ($customerQuery) use ($needle) {
+                        $customerQuery->whereRaw(
+                            "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(name, 'İ', 'i'), 'I', 'ı'), 'Ç', 'ç'), 'Ğ', 'ğ'), 'Ö', 'ö'), 'Ş', 'ş'), 'Ü', 'ü')) LIKE ?",
+                            [$needle]
+                        );
+                    });
+            });
+        }
+
+        if (in_array($status, ['pending', 'confirmed', 'shipped', 'completed', 'cancelled'], true)) {
+            $query->where('status', $status);
+        }
+
+        $orders = $query->orderByRaw("status = 'pending' desc")
             ->latest()
             ->get();
 
         return Inertia::render('orders/index', [
             'orders' => $orders,
+            'filters' => [
+                'search' => $search,
+                'status' => $status,
+            ],
         ]);
     }
 

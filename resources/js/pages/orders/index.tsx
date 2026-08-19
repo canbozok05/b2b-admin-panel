@@ -1,4 +1,5 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 import orders from '@/routes/orders';
 import type { Auth } from '@/types/auth';
 
@@ -11,8 +12,14 @@ type Order = {
     customer: { id: number; name: string } | null;
 };
 
+type Filters = {
+    search: string;
+    status: string;
+};
+
 type Props = {
     orders: Order[];
+    filters: Filters;
 };
 
 const statusLabels: Record<string, string> = {
@@ -23,9 +30,24 @@ const statusLabels: Record<string, string> = {
     cancelled: 'İptal',
 };
 
-export default function OrderIndex({ orders: allOrders }: Props) {
+export default function OrderIndex({ orders: allOrders, filters }: Props) {
     const { auth } = usePage().props as unknown as { auth: Auth };
     const isSuperAdmin = (auth.roles ?? []).includes('Süper Admin');
+
+    const [search, setSearch] = useState(filters.search);
+    const [status, setStatus] = useState(filters.status);
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            router.get(
+                orders.index.url(),
+                { search: search || undefined, status: status || undefined },
+                { preserveState: true, replace: true },
+            );
+        }, 300);
+
+        return () => clearTimeout(timeout);
+    }, [search, status]);
 
     return (
         <>
@@ -44,6 +66,28 @@ export default function OrderIndex({ orders: allOrders }: Props) {
                     )}
                 </div>
 
+                <div className="flex gap-3">
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Sipariş no veya müşteri adı ara..."
+                        className="w-full max-w-sm rounded-md border p-2 text-sm"
+                    />
+                    <select
+                        value={status}
+                        onChange={(e) => setStatus(e.target.value)}
+                        className="rounded-md border p-2 text-sm"
+                    >
+                        <option value="">Tüm Durumlar</option>
+                        {Object.entries(statusLabels).map(([value, label]) => (
+                            <option key={value} value={value}>
+                                {label}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b text-left">
@@ -56,6 +100,16 @@ export default function OrderIndex({ orders: allOrders }: Props) {
                         </tr>
                     </thead>
                     <tbody>
+                        {allOrders.length === 0 && (
+                            <tr>
+                                <td
+                                    colSpan={isSuperAdmin ? 6 : 5}
+                                    className="p-4 text-center text-muted-foreground"
+                                >
+                                    Filtreyle eşleşen sipariş bulunamadı.
+                                </td>
+                            </tr>
+                        )}
                         {allOrders.map((order) => (
                             <tr
                                 key={order.id}

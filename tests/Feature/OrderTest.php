@@ -486,3 +486,45 @@ test('checking an invalid discount code returns an explanatory message', functio
         'discount_amount' => 0,
     ]);
 });
+
+test('orders can be searched by order number', function () {
+    actingAsSuperAdmin();
+
+    Order::factory()->create(['order_number' => 'ORD-111111']);
+    Order::factory()->create(['order_number' => 'ORD-222222']);
+
+    $response = $this->get(route('orders.index', ['search' => '111111']));
+
+    $response->assertInertia(fn ($page) => $page->has('orders', 1));
+});
+
+test('orders can be searched by customer name with Turkish-insensitive casing', function () {
+    actingAsSuperAdmin();
+
+    $customer = Customer::factory()->create(['name' => 'Şahnur Okur']);
+    $otherCustomer = Customer::factory()->create(['name' => 'Cem Keseroğlu']);
+
+    Order::factory()->create(['customer_id' => $customer->id]);
+    Order::factory()->create(['customer_id' => $otherCustomer->id]);
+
+    $response = $this->get(route('orders.index', ['search' => 'ŞAHNUR']));
+
+    $response->assertInertia(fn ($page) => $page
+        ->has('orders', 1)
+        ->where('orders.0.customer.name', 'Şahnur Okur')
+    );
+});
+
+test('orders can be filtered by status', function () {
+    actingAsSuperAdmin();
+
+    Order::factory()->create(['status' => 'pending']);
+    Order::factory()->create(['status' => 'completed']);
+
+    $response = $this->get(route('orders.index', ['status' => 'completed']));
+
+    $response->assertInertia(fn ($page) => $page
+        ->has('orders', 1)
+        ->where('orders.0.status', 'completed')
+    );
+});
