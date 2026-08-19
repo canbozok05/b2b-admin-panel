@@ -2,6 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     BadgePercent,
     BookOpen,
+    FileText,
     FolderGit2,
     LayoutGrid,
     Tags,
@@ -32,6 +33,7 @@ import customers from '@/routes/customers';
 import discountCodes from '@/routes/discount-codes';
 import orders from '@/routes/orders';
 import products from '@/routes/products';
+import reports from '@/routes/reports';
 import type { NavItem } from '@/types';
 import type { Auth } from '@/types/auth';
 
@@ -76,6 +78,12 @@ const allNavItems: NavItemWithRoles[] = [
         title: 'İndirim Kodları',
         href: discountCodes.index(),
         icon: Ticket,
+        roles: ['Süper Admin'],
+    },
+    {
+        title: 'Raporlar',
+        href: reports.sales(),
+        icon: FileText,
         roles: ['Süper Admin'],
     },
     {

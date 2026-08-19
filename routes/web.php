@@ -8,6 +8,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DiscountCodeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ReportController;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
@@ -86,6 +87,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('orders/{id}/edit', [OrderController::class, 'edit'])->name('orders.edit');
         Route::put('orders/{id}', [OrderController::class, 'update'])->name('orders.update');
         Route::delete('orders/{id}', [OrderController::class, 'destroy'])->name('orders.destroy');
+
+        Route::get('reports/sales', [ReportController::class, 'salesReport'])->name('reports.sales');
+        Route::get('reports/sales/pdf', [ReportController::class, 'downloadSalesReportPdf'])->name('reports.sales.pdf');
 
         Route::get('sistem-yoneticileri', [AdminController::class, 'index'])->name('admins.index');
         Route::get('sistem-yoneticileri/create', [AdminController::class, 'create'])->name('admins.create');
