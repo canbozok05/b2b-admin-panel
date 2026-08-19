@@ -14,6 +14,7 @@ use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -290,10 +291,13 @@ class DatabaseSeeder extends Seeder
         for ($i = 0; $i < 15; $i++) {
             $customer = $customers->random();
             $address = $customer->addresses()->inRandomOrder()->first();
+            $createdAt = $this->randomOrderDate();
 
             $order = Order::factory()->create([
                 'customer_id' => $customer->id,
                 'customer_address_id' => fake()->boolean(70) ? $address?->id : null,
+                'created_at' => $createdAt,
+                'updated_at' => $createdAt,
             ]);
 
             $itemCount = fake()->numberBetween(1, 3);
@@ -304,5 +308,20 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
         }
+    }
+
+    /**
+     * Sipariş tarihini %60 ihtimalle bu ay, %40 ihtimalle geçen ay içinden
+     * rastgele seçer; böylece satış raporu her iki dönem için de örnek
+     * veri gösterebilir.
+     */
+    private function randomOrderDate(): Carbon
+    {
+        $referenceDate = fake()->boolean(60) ? now() : now()->subMonthNoOverflow();
+
+        $start = $referenceDate->copy()->startOfMonth();
+        $end = $referenceDate->isSameMonth(now()) ? now() : $referenceDate->copy()->endOfMonth();
+
+        return Carbon::createFromTimestamp(fake()->numberBetween($start->timestamp, $end->timestamp));
     }
 }
