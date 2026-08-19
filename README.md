@@ -8,10 +8,13 @@ Bu proje bir **staj çalışması** olarak, sıfırdan öğrenilerek geliştiril
 
 ## Özellikler
 
-- **Dashboard**: toplam müşteri, aylık satış hacmi, bekleyen sipariş sayısı ve kritik stok uyarıları — gerçek zamanlı veritabanı verileriyle.
-- **Kategori yönetimi**: iç içe geçebilen (üst/alt) kategoriler, ekleme/düzenleme/silme.
-- **Ürün yönetimi**: kategoriye bağlı ürünler, isme göre anlık arama/filtreleme (sayfa yenilenmeden), zengin metin editörlü (TipTap) açıklama alanı, çoklu görsel yükleme ve silme.
-- **Sipariş operasyonları**: bekleyen siparişlerin öne çıkarıldığı liste, sipariş detay sayfası (müşteri bilgisi, ürünler, toplam tutar), durum güncelleme ve durum değiştiğinde müşteriye otomatik email bildirimi.
+- **Dashboard**: toplam müşteri, aylık satış hacmi (yalnızca onaylanmış ve sonraki durumdaki siparişlerden), bekleyen sipariş sayısı ve **kategori bazlı kritik stok eşiğine** göre hesaplanan stok uyarıları — gerçek zamanlı veritabanı verileriyle.
+- **Kategori yönetimi**: iç içe geçebilen (üst/alt) kategoriler, her kategoriye özel **KDV oranı** ve **kritik stok eşiği**, ekleme/düzenleme/silme.
+- **Ürün yönetimi**: kategoriye bağlı ürünler, isme göre anlık arama/filtreleme (sayfa yenilenmeden), zengin metin editörlü (TipTap) açıklama alanı, çoklu görsel yükleme/silme, aktif bir kampanya varsa indirimli fiyatın gösterilmesi.
+- **Müşteri yönetimi**: müşteri kayıtları, her müşteriye ev/iş/okul gibi etiketli **birden çok teslimat adresi**, isim/e-posta/telefon üzerinde Türkçe büyük-küçük harf duyarlılığını gözeten arama ve duruma göre filtreleme.
+- **Sipariş operasyonları**: bekleyen siparişlerin öne çıkarıldığı liste; sipariş oluşturma/düzenlemede müşterinin kayıtlı bir adresini seçme ya da siparişle birlikte yeni bir adres ekleme (zorunlu), KDV'nin fiyata dahil olduğu varsayılıp geriye doğru hesaplanması, aktif kampanya varsa indirimli birim fiyatın kullanılması; sipariş detay sayfası (müşteri, teslimat adresi, ürünler, ara toplam/indirim/nihai toplam), durum güncelleme ve durum değiştiğinde müşteriye otomatik email bildirimi.
+- **Kampanyalar**: bir ürüne veya bir kategorinin tamamına, belirli bir tarih aralığında geçerli olacak yüzde ya da sabit tutarlı indirim tanımlama; ürüne özel kampanya kategori kampanyasından önceliklidir.
+- **İndirim kodları**: ürün veya kategori bazlı, yüzde/sabit tutarlı, isteğe bağlı asgari sipariş tutarı şartlı kuponlar; sipariş formunda kaydetmeden önce kodu doğrulayıp uygulanacak indirimi gösteren bir kontrol düğmesi.
 - **Rol tabanlı erişim kontrolü**: Spatie Laravel Permission ile "Süper Admin" ve "Depo Görevlisi" rolleri — yetkisiz menü öğeleri sidebar'da gizlenir, route seviyesinde de korunur (sadece görsel gizleme değil).
 - **Sistem Yöneticileri**: yönetici hesapları oluşturma, düzenleme, rol atama ve silme (sadece Süper Admin).
 
@@ -29,15 +32,17 @@ composer install
 npm install
 cp .env.example .env
 php artisan key:generate
+php artisan storage:link
 php artisan migrate --seed
 npm run build
 ```
 
-Seeder çalıştıktan sonra iki test hesabı hazır olur:
+Seeder çalıştıktan sonra test hesapları ve gerçekçi bir katalog (kategori ağacı, ürünler, görseller, müşteriler, siparişler, örnek kampanya/indirim kodu) hazır olur:
 
 | Rol | Email | Şifre |
 |---|---|---|
 | Süper Admin | test@example.com | password |
+| Süper Admin | admin@test.com | password |
 | Depo Görevlisi | depo@example.com | password |
 
 ## Geliştirme ortamını çalıştırma
@@ -50,7 +55,7 @@ Bu komut Laravel sunucusunu, kuyruk dinleyicisini ve Vite'ı birlikte başlatır
 
 ## Testler
 
-Rol tabanlı erişim kontrolü (Süper Admin / Depo Görevlisi), kategori/ürün silme kısıtlamaları ve sipariş durumu güncellemesi (email bildirimi dahil) için Pest ile yazılmış bir test paketi bulunuyor.
+Rol tabanlı erişim kontrolü (Süper Admin / Depo Görevlisi), kategori/ürün silme kısıtlamaları, stokun sipariş oluşturma/düzenleme/silme sırasında doğru şekilde düşülüp geri eklenmesi, kampanya ve indirim kodu hesaplamaları, müşteri adres kuralları ve sipariş durumu güncellemesi (email bildirimi dahil) gibi uygulamanın iş kurallarını doğrulayan bir Pest test paketi bulunuyor.
 
 ```bash
 php artisan test
