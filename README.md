@@ -15,6 +15,7 @@ Bu proje bir **staj çalışması** olarak, sıfırdan öğrenilerek geliştiril
 - **Sipariş operasyonları**: bekleyen siparişlerin öne çıkarıldığı liste; sipariş oluşturma/düzenlemede müşterinin kayıtlı bir adresini seçme ya da siparişle birlikte yeni bir adres ekleme (zorunlu), KDV'nin fiyata dahil olduğu varsayılıp geriye doğru hesaplanması, aktif kampanya varsa indirimli birim fiyatın kullanılması; sipariş detay sayfası (müşteri, teslimat adresi, ürünler, ara toplam/indirim/nihai toplam), durum güncelleme ve durum değiştiğinde müşteriye otomatik email bildirimi.
 - **Kampanyalar**: bir ürüne veya bir kategorinin tamamına, belirli bir tarih aralığında geçerli olacak yüzde ya da sabit tutarlı indirim tanımlama; ürüne özel kampanya kategori kampanyasından önceliklidir.
 - **İndirim kodları**: ürün veya kategori bazlı, yüzde/sabit tutarlı, isteğe bağlı asgari sipariş tutarı şartlı kuponlar; sipariş formunda kaydetmeden önce kodu doğrulayıp uygulanacak indirimi gösteren bir kontrol düğmesi.
+- **Satış raporları**: bu ayın ve bir önceki ayın toplam satışını, sipariş listesini ve en çok satan ürünlerini gösteren bir rapor sayfası; aynı rapor tek tıkla PDF olarak indirilebilir.
 - **Rol tabanlı erişim kontrolü**: Spatie Laravel Permission ile "Süper Admin" ve "Depo Görevlisi" rolleri — yetkisiz menü öğeleri sidebar'da gizlenir, route seviyesinde de korunur (sadece görsel gizleme değil).
 - **Sistem Yöneticileri**: yönetici hesapları oluşturma, düzenleme, rol atama ve silme (sadece Süper Admin).
 
@@ -23,6 +24,7 @@ Bu proje bir **staj çalışması** olarak, sıfırdan öğrenilerek geliştiril
 - **Back-end**: Laravel 13, Spatie Laravel Permission
 - **Front-end**: React 19, Inertia.js, TypeScript, Tailwind CSS
 - **Zengin metin editörü**: TipTap
+- **PDF üretimi**: barryvdh/laravel-dompdf
 - **Veritabanı**: SQLite (geliştirme ortamı)
 
 ## Kurulum
@@ -55,7 +57,7 @@ Bu komut Laravel sunucusunu, kuyruk dinleyicisini ve Vite'ı birlikte başlatır
 
 ## Testler
 
-Rol tabanlı erişim kontrolü (Süper Admin / Depo Görevlisi), kategori/ürün silme kısıtlamaları, stokun sipariş oluşturma/düzenleme/silme sırasında doğru şekilde düşülüp geri eklenmesi, kampanya ve indirim kodu hesaplamaları, müşteri adres kuralları ve sipariş durumu güncellemesi (email bildirimi dahil) gibi uygulamanın iş kurallarını doğrulayan bir Pest test paketi bulunuyor.
+Rol tabanlı erişim kontrolü (Süper Admin / Depo Görevlisi), kategori/ürün silme kısıtlamaları, stokun sipariş oluşturma/düzenleme/silme sırasında doğru şekilde düşülüp geri eklenmesi, kampanya ve indirim kodu hesaplamaları, müşteri adres kuralları, satış raporu hesaplamaları ve sipariş durumu güncellemesi (email bildirimi dahil) gibi uygulamanın iş kurallarını doğrulayan bir Pest test paketi bulunuyor.
 
 ```bash
 php artisan test
